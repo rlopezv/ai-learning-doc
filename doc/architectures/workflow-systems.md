@@ -44,7 +44,7 @@ flowchart TD
 
 ---
 
-### 6.3 [LangGraph](https://langchain-ai.github.io/langgraph): Graph-Based Workflow Orchestration
+### 6.3 LangGraph: Graph-Based Workflow Orchestration
 
 LangGraph represents workflows as directed graphs where nodes are processing steps (LLM calls, tool calls, or Python functions) and edges are transitions (conditional or unconditional).
 
@@ -282,4 +282,4 @@ def resilient_llm_call(prompt: str, primary_model: str = "gpt-4o",
 - [Building Production-Ready LLM Applications](https://huyenchip.com/2023/04/11/llm-engineering.html) — Chip Huyen, 2023.
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to architectures Index](index.md) | [🏠 Home](../index.md)

@@ -218,7 +218,7 @@ print("=" * 55)
 ---
 
 > **Navigation**
-> [← Part XVIII — Practical Case Studies](part_18_case_studies.md)
+> [← Part XVIII — Practical Case Studies](../case_studies/index.md)
 
 ---
 
@@ -227,4 +227,4 @@ print("=" * 55)
 *Parts 0–XIX · 86 Chapters · 18 Hands-on Labs · ~130,000 words*
 
 ---
-[« Back to future Index](index.md) | [🏠 Home](../../index.md)
+[« Back to future Index](index.md) | [🏠 Home](../index.md)

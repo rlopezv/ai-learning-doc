@@ -23,4 +23,4 @@
   - [4.1 Corpus Maintenance Workflows](knowledge-base-operations.md#41-corpus-maintenance-workflows)
   - [4.2 Index Refresh Strategies](knowledge-base-operations.md#42-index-refresh-strategies)
   - [4.3 Quality Regression Detection on Updates](knowledge-base-operations.md#43-quality-regression-detection-on-updates)
-  - [🧪 Hands-on Lab: Operational Runbook Simulator](knowledge-base-operations.md#-hands-on-lab-operational-runbook-simulator)
+  - [🧪 Hands-on Lab: Operational Runbook Simulator](knowledge-base-operations.md#hands-on-lab-operational-runbook-simulator)

@@ -36,7 +36,7 @@
   - [5.5 Multi-Agent Collaboration](agent-architectures.md#55-multi-agent-collaboration)
   - [5.6 Reliability and Control](agent-architectures.md#56-reliability-and-control)
   - [5.7 Agent Frameworks](agent-architectures.md#57-agent-frameworks)
-  - [🧪 Hands-on Lab: Build a Tool-Using Agent](agent-architectures.md#-hands-on-lab-build-a-tool-using-agent)
+  - [🧪 Hands-on Lab: Build a Tool-Using Agent](agent-architectures.md#hands-on-lab-build-a-tool-using-agent)
 - [Chapter 6 — Workflow Systems](workflow-systems.md)
   - [6.1 Workflow Orchestration for LLM Systems](workflow-systems.md#61-workflow-orchestration-for-llm-systems)
   - [6.2 Deterministic vs. Adaptive Workflows](workflow-systems.md#62-deterministic-vs-adaptive-workflows)

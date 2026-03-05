@@ -632,7 +632,7 @@ python adversarial_suite.py
 ---
 
 > **Navigation**
-> [← Part IX — Evaluation Engineering](part_09_evaluation_engineering.md) | [→ Part XI — AI Platform Engineering](part_11_platform_engineering.md)
+> [← Part IX — Evaluation Engineering](../evaluation_engineering/index.md) | [→ Part XI — AI Platform Engineering](../platform_engineering/index.md)
 
 ---
-[« Back to testing Index](index.md) | [🏠 Home](../../index.md)
+[« Back to testing Index](index.md) | [🏠 Home](../index.md)

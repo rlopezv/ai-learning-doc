@@ -18,7 +18,7 @@ This shift introduces significant power — and significant engineering complexi
 
 ---
 
-### 5.2 The [ReAct](https://arxiv.org/abs/2210.03629) Pattern
+### 5.2 The ReAct Pattern
 
 ReAct (Reasoning + Acting) is the foundational agent pattern. The LLM alternates between **Thought** (reasoning about what to do), **Action** (invoking a tool), and **Observation** (processing the tool result), until it reaches a final answer.
 
@@ -572,4 +572,4 @@ Answer: The annual subscription costs $1,200 per year.
 - [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) — Lilian Weng (OpenAI), 2023. Comprehensive overview of agent components.
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to architectures Index](index.md) | [🏠 Home](../index.md)

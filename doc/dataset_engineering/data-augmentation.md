@@ -275,7 +275,7 @@ class AugmentationPipeline:
 ---
 
 > **Navigation**
-> [← Part IV — Advanced RAG](part_04_advanced_rag.md) | [→ Part VI — Artifact Engineering](part_06_artifact_engineering.md)
+> [← Part IV — Advanced RAG](../advanced_rag/index.md) | [→ Part VI — Artifact Engineering](../artifact_engineering/index.md)
 
 ---
-[« Back to dataset_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to dataset_engineering Index](index.md) | [🏠 Home](../index.md)

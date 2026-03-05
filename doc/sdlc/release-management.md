@@ -446,7 +446,7 @@ make check-dod FEATURE_ID=RAG-1234
 ---
 
 > **Navigation**
-> [← Part VII — Layouts and Repositories](part_07_layouts_repositories.md) | [→ Part IX — Evaluation Engineering](part_09_evaluation_engineering.md)
+> [← Part VII — Layouts and Repositories](../layouts_repositories/index.md) | [→ Part IX — Evaluation Engineering](../evaluation_engineering/index.md)
 
 ---
-[« Back to sdlc Index](index.md) | [🏠 Home](../../index.md)
+[« Back to sdlc Index](index.md) | [🏠 Home](../index.md)

@@ -402,4 +402,4 @@ GRAFANA_DASHBOARD_SPEC = {
 ---
 
 ---
-[« Back to observability Index](index.md) | [🏠 Home](../../index.md)
+[« Back to observability Index](index.md) | [🏠 Home](../index.md)

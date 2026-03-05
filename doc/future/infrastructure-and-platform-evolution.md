@@ -244,4 +244,4 @@ OPEN_VS_CLOSED_DECISION_FRAMEWORK = {
 ---
 
 ---
-[« Back to future Index](index.md) | [🏠 Home](../../index.md)
+[« Back to future Index](index.md) | [🏠 Home](../index.md)

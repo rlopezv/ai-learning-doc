@@ -410,4 +410,4 @@ evaluate(hyde_retrieve_lab, "HyDE")
 ---
 
 ---
-[« Back to advanced_rag Index](index.md) | [🏠 Home](../../index.md)
+[« Back to advanced_rag Index](index.md) | [🏠 Home](../index.md)

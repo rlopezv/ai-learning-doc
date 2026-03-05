@@ -244,7 +244,7 @@ class RetrievalMonitor:
 ---
 
 > **Navigation**
-> [← Part III — RAG Engineering](part_03_rag_engineering.md) | [→ Part V — Dataset Engineering](part_05_dataset_engineering.md)
+> [← Part III — RAG Engineering](../rag_engineering/index.md) | [→ Part V — Dataset Engineering](../dataset_engineering/index.md)
 
 ---
-[« Back to advanced_rag Index](index.md) | [🏠 Home](../../index.md)
+[« Back to advanced_rag Index](index.md) | [🏠 Home](../index.md)

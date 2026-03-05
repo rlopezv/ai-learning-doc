@@ -403,4 +403,4 @@ The shift from Software 1.0 to LLM-based systems has direct implications for arc
 - [Ollama Model Library](https://ollama.com/library) — Available open-weight models for local deployment.
 
 ---
-[« Back to foundations Index](index.md) | [🏠 Home](../../index.md)
+[« Back to foundations Index](index.md) | [🏠 Home](../index.md)

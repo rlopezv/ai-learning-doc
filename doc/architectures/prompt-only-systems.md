@@ -316,4 +316,4 @@ String response2 = assistant.chat("Can you give me a Python example?");
 - [How to Reliably Get JSON from LLMs](https://yonom.substack.com/p/native-json-output-from-gpt-4) — Community patterns for structured output.
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to architectures Index](index.md) | [🏠 Home](../index.md)

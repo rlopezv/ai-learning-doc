@@ -281,4 +281,4 @@ def multi_hop_query(start_entity: str, max_hops: int = 3) -> list[dict]:
 ---
 
 ---
-[« Back to advanced_rag Index](index.md) | [🏠 Home](../../index.md)
+[« Back to advanced_rag Index](index.md) | [🏠 Home](../index.md)

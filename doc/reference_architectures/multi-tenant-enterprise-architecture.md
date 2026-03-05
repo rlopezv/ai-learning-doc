@@ -330,4 +330,4 @@ class CrossTenantGovernanceReport:
 ---
 
 ---
-[« Back to reference_architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to reference_architectures Index](index.md) | [🏠 Home](../index.md)

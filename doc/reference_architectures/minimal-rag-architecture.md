@@ -301,4 +301,4 @@ for category, items in GRADUATION_CHECKLIST.items():
 ---
 
 ---
-[« Back to reference_architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to reference_architectures Index](index.md) | [🏠 Home](../index.md)

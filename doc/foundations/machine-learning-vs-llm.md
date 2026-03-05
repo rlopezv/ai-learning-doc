@@ -303,4 +303,4 @@ Vectors that are close in the embedding space represent semantically similar tex
 - [Designing Machine Learning Systems](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/) — Chip Huyen, O'Reilly, 2022.
 
 ---
-[« Back to foundations Index](index.md) | [🏠 Home](../../index.md)
+[« Back to foundations Index](index.md) | [🏠 Home](../index.md)

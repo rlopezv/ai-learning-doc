@@ -505,7 +505,7 @@ python governance_scorecard.py
 ---
 
 > **Navigation**
-> [← Part XIV — Security](part_14_security.md) | [→ Part XVI — Operations](part_16_operations.md)
+> [← Part XIV — Security](../security/index.md) | [→ Part XVI — Operations](../operations/index.md)
 
 ---
-[« Back to governance Index](index.md) | [🏠 Home](../../index.md)
+[« Back to governance Index](index.md) | [🏠 Home](../index.md)

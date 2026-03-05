@@ -346,7 +346,7 @@ def compute_error_budget(slo: SLODefinition, current_pct: float) -> dict:
 ---
 
 > **Navigation**
-> [← Part X — Testing LLM Systems](part_10_testing.md) | [→ Part XII — Infrastructure](part_12_infrastructure.md)
+> [← Part X — Testing LLM Systems](../testing/index.md) | [→ Part XII — Infrastructure](../infrastructure/index.md)
 
 ---
-[« Back to platform_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to platform_engineering Index](index.md) | [🏠 Home](../index.md)

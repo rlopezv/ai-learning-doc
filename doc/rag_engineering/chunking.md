@@ -758,4 +758,4 @@ for name, strategy_fn in STRATEGIES.items():
 
 ---
 
-[« Back to rag_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to rag_engineering Index](index.md) | [🏠 Home](../index.md)

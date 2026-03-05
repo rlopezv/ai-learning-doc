@@ -178,4 +178,4 @@ Using the C4 model forces architectural clarity across levels and makes it easy 
 - [Building LLM Powered Applications](https://www.oreilly.com/library/view/building-llm-powered/9781835462317/) — Valentina Alto, Packt, 2024.
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to architectures Index](index.md) | [🏠 Home](../index.md)

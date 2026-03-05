@@ -32,4 +32,4 @@
   - [5.2 Continuous Evaluation with Baselines](evaluation-pipelines.md#52-continuous-evaluation-with-baselines)
   - [5.3 Regression Detection](evaluation-pipelines.md#53-regression-detection)
   - [5.4 Evaluation Reporting](evaluation-pipelines.md#54-evaluation-reporting)
-  - [🧪 Hands-on Lab: Full Evaluation Pipeline](evaluation-pipelines.md#-hands-on-lab-full-evaluation-pipeline)
+  - [🧪 Hands-on Lab: Full Evaluation Pipeline](evaluation-pipelines.md#hands-on-lab-full-evaluation-pipeline)

@@ -165,7 +165,7 @@ fused = reciprocal_rank_fusion([vector_results, bm25_results])
 top_5 = fused[:5]
 ```
 
-RRF is a key component of hybrid search, covered in depth in **[Part IV, Chapter 1](part_04_advanced_rag.md#chapter-1--hybrid-search-)**.
+RRF is a key component of hybrid search, covered in depth in **[Part IV, Chapter 1](../advanced_rag/index.md)**.
 
 ---
 
@@ -260,4 +260,4 @@ class TwoStageRetriever:
 ---
 
 ---
-[« Back to rag_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to rag_engineering Index](index.md) | [🏠 Home](../index.md)

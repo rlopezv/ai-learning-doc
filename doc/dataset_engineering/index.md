@@ -23,7 +23,7 @@
   - [3.4 Adversarial and Edge-Case Generation](synthetic-dataset-generation.md#34-adversarial-and-edge-case-generation)
   - [3.5 Multi-Turn Conversation Datasets](synthetic-dataset-generation.md#35-multi-turn-conversation-datasets)
   - [3.6 Quality Filtering for Synthetic Data](synthetic-dataset-generation.md#36-quality-filtering-for-synthetic-data)
-  - [🧪 Hands-on Lab: Build a RAG Evaluation Dataset](synthetic-dataset-generation.md#-hands-on-lab-build-a-rag-evaluation-dataset)
+  - [🧪 Hands-on Lab: Build a RAG Evaluation Dataset](synthetic-dataset-generation.md#hands-on-lab-build-a-rag-evaluation-dataset)
 - [Chapter 4 — Data Quality](data-quality.md)
   - [4.1 Quality Dimensions](data-quality.md#41-quality-dimensions)
   - [4.2 Automated Quality Checks](data-quality.md#42-automated-quality-checks)

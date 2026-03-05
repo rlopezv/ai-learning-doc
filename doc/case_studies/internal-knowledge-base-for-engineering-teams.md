@@ -267,4 +267,4 @@ UNEXPECTED_OUTCOMES = [
 ---
 
 ---
-[« Back to case_studies Index](index.md) | [🏠 Home](../../index.md)
+[« Back to case_studies Index](index.md) | [🏠 Home](../index.md)

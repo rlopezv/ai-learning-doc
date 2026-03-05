@@ -317,4 +317,4 @@ def sanitize_tool_output(raw_output: dict, max_length: int = 2000) -> str:
 - [OWASP LLM Top 10 — LLM07: Insecure Plugin Design](https://owasp.org/www-project-top-10-for-large-language-model-applications/) — Security guidance for tool-augmented systems.
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to architectures Index](index.md) | [🏠 Home](../index.md)

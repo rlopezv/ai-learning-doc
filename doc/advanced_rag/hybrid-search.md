@@ -398,4 +398,4 @@ hybrid          100%     100%      50%       92%
 ---
 
 ---
-[« Back to advanced_rag Index](index.md) | [🏠 Home](../../index.md)
+[« Back to advanced_rag Index](index.md) | [🏠 Home](../index.md)

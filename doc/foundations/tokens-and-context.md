@@ -334,4 +334,4 @@ complex reasoning     → gpt-4o or llama3:70b
 - [LongBench: A Bilingual, Multitask Benchmark for Long Context Understanding](https://arxiv.org/abs/2308.14508) — Bai et al., 2023. Evaluation of long-context model performance.
 
 ---
-[« Back to foundations Index](index.md) | [🏠 Home](../../index.md)
+[« Back to foundations Index](index.md) | [🏠 Home](../index.md)

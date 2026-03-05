@@ -226,4 +226,4 @@ Each layer is independently deployable and testable. A failure or bypass at laye
 ---
 
 ---
-[« Back to security Index](index.md) | [🏠 Home](../../index.md)
+[« Back to security Index](index.md) | [🏠 Home](../index.md)

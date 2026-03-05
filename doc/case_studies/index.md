@@ -28,4 +28,4 @@
   - [5.2 Medical Corpus Management](healthcare-knowledge-assistant.md#52-medical-corpus-management)
   - [5.3 Safety-First Generation Design](healthcare-knowledge-assistant.md#53-safety-first-generation-design)
   - [5.4 Evaluation for Clinical Settings](healthcare-knowledge-assistant.md#54-evaluation-for-clinical-settings)
-  - [🧪 Hands-on Lab: End-to-End Case Study Simulator](healthcare-knowledge-assistant.md#-hands-on-lab-end-to-end-case-study-simulator)
+  - [🧪 Hands-on Lab: End-to-End Case Study Simulator](healthcare-knowledge-assistant.md#hands-on-lab-end-to-end-case-study-simulator)

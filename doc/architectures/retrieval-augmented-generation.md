@@ -313,4 +313,4 @@ Standard RAG is the baseline. Several variants address specific limitations:
 - [OpenAI Cookbook: RAG](https://cookbook.openai.com/examples/vector_databases/readme) — Practical RAG examples.
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to architectures Index](index.md) | [🏠 Home](../index.md)

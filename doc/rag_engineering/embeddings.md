@@ -286,4 +286,4 @@ def evaluate_embedding_model(
 ---
 
 ---
-[« Back to rag_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to rag_engineering Index](index.md) | [🏠 Home](../index.md)

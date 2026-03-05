@@ -28,4 +28,4 @@
   - [4.3 Runbooks as Code](documentation-as-code.md#43-runbooks-as-code)
   - [4.4 API Documentation with OpenAPI](documentation-as-code.md#44-api-documentation-with-openapi)
   - [4.5 Automated Documentation Pipelines](documentation-as-code.md#45-automated-documentation-pipelines)
-  - [🧪 Hands-on Lab: ADR Pipeline](documentation-as-code.md#-hands-on-lab-adr-pipeline)
+  - [🧪 Hands-on Lab: ADR Pipeline](documentation-as-code.md#hands-on-lab-adr-pipeline)

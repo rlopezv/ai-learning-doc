@@ -522,7 +522,7 @@ print(f"\n{'✓ GATES PASSED' if mean_recall >= 0.80 else '✗ GATES FAILED'}")
 ---
 
 > **Navigation**
-> [← Part VIII — AI Systems SDLC](part_08_sdlc.md) | [→ Part X — Testing LLM Systems](part_10_testing.md)
+> [← Part VIII — AI Systems SDLC](../sdlc/index.md) | [→ Part X — Testing LLM Systems](../testing/index.md)
 
 ---
-[« Back to evaluation_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to evaluation_engineering Index](index.md) | [🏠 Home](../index.md)

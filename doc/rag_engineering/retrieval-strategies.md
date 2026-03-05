@@ -455,4 +455,4 @@ evaluate(lambda q: mmr_retrieve(q, k=3, lam=0.3), "MMR (λ=0.3, k=3)")
 ---
 
 ---
-[« Back to rag_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to rag_engineering Index](index.md) | [🏠 Home](../index.md)

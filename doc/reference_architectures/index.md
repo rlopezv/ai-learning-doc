@@ -23,4 +23,4 @@
   - [4.1 Constraints and Design Principles](air-gapped-and-on-premise-architecture.md#41-constraints-and-design-principles)
   - [4.2 Component Selection for Air-Gapped Environments](air-gapped-and-on-premise-architecture.md#42-component-selection-for-air-gapped-environments)
   - [4.3 Full On-Premise Stack](air-gapped-and-on-premise-architecture.md#43-full-on-premise-stack)
-  - [🧪 Hands-on Lab: Architecture Decision Record Generator](air-gapped-and-on-premise-architecture.md#-hands-on-lab-architecture-decision-record-generator)
+  - [🧪 Hands-on Lab: Architecture Decision Record Generator](air-gapped-and-on-premise-architecture.md#hands-on-lab-architecture-decision-record-generator)

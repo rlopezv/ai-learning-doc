@@ -309,4 +309,4 @@ By the end of this book, you will be able to:
 - [LangChain4j Documentation](https://docs.langchain4j.dev) — Java orchestration framework.
 
 ---
-[« Back to foundations Index](index.md) | [🏠 Home](../../index.md)
+[« Back to foundations Index](index.md) | [🏠 Home](../index.md)

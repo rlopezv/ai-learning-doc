@@ -262,4 +262,4 @@ class IdempotentIngestionPipeline:
 ---
 
 ---
-[« Back to infrastructure Index](index.md) | [🏠 Home](../../index.md)
+[« Back to infrastructure Index](index.md) | [🏠 Home](../index.md)

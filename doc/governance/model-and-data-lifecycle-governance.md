@@ -418,4 +418,4 @@ class GovernanceArtefactStore:
 ---
 
 ---
-[« Back to governance Index](index.md) | [🏠 Home](../../index.md)
+[« Back to governance Index](index.md) | [🏠 Home](../index.md)

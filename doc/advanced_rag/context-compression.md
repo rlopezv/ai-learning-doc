@@ -219,4 +219,4 @@ class CompressedRAGPipeline:
 ---
 
 ---
-[« Back to advanced_rag Index](index.md) | [🏠 Home](../../index.md)
+[« Back to advanced_rag Index](index.md) | [🏠 Home](../index.md)

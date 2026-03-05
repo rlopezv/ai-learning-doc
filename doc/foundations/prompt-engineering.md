@@ -486,4 +486,4 @@ public class PromptEvaluator {
 - [Prompt Engineering for LLMs](https://www.oreilly.com/library/view/prompt-engineering-for/9781098153427/) — John Berryman & Albert Ziegler, O'Reilly, 2024.
 
 ---
-[« Back to foundations Index](index.md) | [🏠 Home](../../index.md)
+[« Back to foundations Index](index.md) | [🏠 Home](../index.md)

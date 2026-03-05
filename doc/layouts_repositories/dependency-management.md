@@ -299,4 +299,4 @@ model = SentenceTransformer("./vendor/models/all-MiniLM-L6-v2")
 ---
 
 ---
-[« Back to layouts_repositories Index](index.md) | [🏠 Home](../../index.md)
+[« Back to layouts_repositories Index](index.md) | [🏠 Home](../index.md)

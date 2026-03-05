@@ -517,7 +517,7 @@ python case_study_simulator.py
 ---
 
 > **Navigation**
-> [← Part XVII — Reference Architectures](part_17_reference_architectures.md) | [→ Part XIX — The Future](part_19_future.md)
+> [← Part XVII — Reference Architectures](../reference_architectures/index.md) | [→ Part XIX — The Future](../future/index.md)
 
 ---
-[« Back to case_studies Index](index.md) | [🏠 Home](../../index.md)
+[« Back to case_studies Index](index.md) | [🏠 Home](../index.md)

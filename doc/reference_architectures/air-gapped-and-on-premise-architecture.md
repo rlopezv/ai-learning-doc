@@ -530,7 +530,7 @@ python adr_generator.py
 ---
 
 > **Navigation**
-> [← Part XVI — Operations](part_16_operations.md) | [→ Part XVIII — Practical Case Studies](part_18_case_studies.md)
+> [← Part XVI — Operations](../operations/index.md) | [→ Part XVIII — Practical Case Studies](../case_studies/index.md)
 
 ---
-[« Back to reference_architectures Index](index.md) | [🏠 Home](../../index.md)
+[« Back to reference_architectures Index](index.md) | [🏠 Home](../index.md)

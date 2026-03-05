@@ -387,4 +387,4 @@ class LogQualityAnalyser:
 ---
 
 ---
-[« Back to observability Index](index.md) | [🏠 Home](../../index.md)
+[« Back to observability Index](index.md) | [🏠 Home](../index.md)

@@ -201,4 +201,4 @@ Code review checklists must include AI-specific concerns.
 
 ---
 
-[« Back to sdlc Index](index.md) | [🏠 Home](../../index.md)
+[« Back to sdlc Index](index.md) | [🏠 Home](../index.md)

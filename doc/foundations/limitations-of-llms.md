@@ -187,7 +187,7 @@ This is covered in depth in **Part XIV**. The key engineering principle is: **ne
 ---
 
 > **Navigation**
-> [← Part 0: Introduction](part_00_introduction.md) | [→ Part II: LLM Architectures](part_02_architectures.md)
+> [← Part 0: Introduction](../foundations/index.md) | [→ Part II: LLM Architectures](../architectures/index.md)
 
 ## References
 
@@ -207,4 +207,4 @@ This is covered in depth in **Part XIV**. The key engineering principle is: **ne
 - [Anthropic Responsible Scaling Policy](https://www.anthropic.com/news/anthropics-responsible-scaling-policy) — Model risk management framework.
 
 ---
-[« Back to foundations Index](index.md) | [🏠 Home](../../index.md)
+[« Back to foundations Index](index.md) | [🏠 Home](../index.md)

@@ -24,4 +24,4 @@
   - [4.2 Role-Based Access Control for AI Systems](authentication-authorisation-and-audit.md#42-role-based-access-control-for-ai-systems)
   - [4.3 Audit Logging for Compliance](authentication-authorisation-and-audit.md#43-audit-logging-for-compliance)
   - [4.4 Java Security Integration](authentication-authorisation-and-audit.md#44-java-security-integration)
-  - [🧪 Hands-on Lab: Security Validation Pipeline](authentication-authorisation-and-audit.md#-hands-on-lab-security-validation-pipeline)
+  - [🧪 Hands-on Lab: Security Validation Pipeline](authentication-authorisation-and-audit.md#hands-on-lab-security-validation-pipeline)

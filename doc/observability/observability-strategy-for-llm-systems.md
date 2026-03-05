@@ -211,4 +211,4 @@ def observe_request(emit_fn: Callable):
 ---
 
 ---
-[« Back to observability Index](index.md) | [🏠 Home](../../index.md)
+[« Back to observability Index](index.md) | [🏠 Home](../index.md)

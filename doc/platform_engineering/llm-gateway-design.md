@@ -531,4 +531,4 @@ ROUTING_RULES = [
 ---
 
 ---
-[« Back to platform_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to platform_engineering Index](index.md) | [🏠 Home](../index.md)

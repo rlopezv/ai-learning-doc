@@ -85,8 +85,462 @@ and alignment with our self-hosted requirement.
 ## Links
 
 - [Qdrant Documentation](https://qdrant.tech/documentation)
-- [Benchmark Script](../../scripts/vector_db_benchmark.py)
+- [Benchmark Script](../scripts/vector_db_benchmark.py)
 - [Migration Plan](ADR-007-migration-plan.md)
+```
+
+**Benchmark Script**
+
+```python
+#!/usr/bin/env python3
+"""
+vector_db_benchmark.py
+======================
+Benchmark script referenced in ADR-007 (Vector Database Selection).
+
+Measures latency and throughput for top-K semantic search across:
+  - Qdrant       (local via Docker or qdrant-client)
+  - Weaviate     (local via Docker or weaviate-client)
+  - Milvus       (local via Docker or pymilvus)
+
+Usage
+-----
+  # Run all backends (requires each running locally):
+  python vector_db_benchmark.py --backends qdrant weaviate milvus
+
+  # Qdrant only, 100K vectors, 500 queries:
+  python vector_db_benchmark.py --backends qdrant --n-vectors 100000 --n-queries 500
+
+  # Dry-run with synthetic data only (no real DB connections):
+  python vector_db_benchmark.py --dry-run
+
+Dependencies
+------------
+  pip install qdrant-client weaviate-client pymilvus numpy tqdm
+
+Docker quick-start
+------------------
+  # Qdrant
+  docker run -d -p 6333:6333 qdrant/qdrant
+
+  # Weaviate
+  docker run -d -p 8080:8080 -e QUERY_DEFAULTS_LIMIT=25 \
+    -e AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true \
+    -e PERSISTENCE_DATA_PATH='/var/lib/weaviate' \
+    semitechnologies/weaviate:latest
+
+  # Milvus (standalone)
+  docker run -d -p 19530:19530 milvusdb/milvus:v2.4.0-standalone
+"""
+
+import argparse
+import time
+import statistics
+import sys
+from dataclasses import dataclass, field
+from typing import Optional
+import numpy as np
+
+# ── Configuration ─────────────────────────────────────────────────
+
+DIMENSION       = 1536          # OpenAI text-embedding-3-small dimensions
+COLLECTION_NAME = "benchmark"
+TOP_K           = 5             # Match ADR-007 benchmark: top-5 latency p99
+
+
+@dataclass
+class BenchmarkConfig:
+    n_vectors:  int   = 1_000_000   # Number of vectors to index
+    n_queries:  int   = 1_000       # Number of search queries
+    top_k:      int   = TOP_K
+    dimension:  int   = DIMENSION
+    batch_size: int   = 1_000       # Upsert batch size
+    warmup_queries: int = 50        # Warm-up before timing
+
+
+@dataclass
+class BenchmarkResult:
+    backend:        str
+    n_vectors:      int
+    n_queries:      int
+    top_k:          int
+    index_time_s:   float
+    latencies_ms:   list[float] = field(default_factory=list)
+    error:          Optional[str] = None
+
+    @property
+    def p50_ms(self) -> float:
+        return statistics.median(self.latencies_ms) if self.latencies_ms else 0.0
+
+    @property
+    def p95_ms(self) -> float:
+        if not self.latencies_ms:
+            return 0.0
+        return float(np.percentile(self.latencies_ms, 95))
+
+    @property
+    def p99_ms(self) -> float:
+        if not self.latencies_ms:
+            return 0.0
+        return float(np.percentile(self.latencies_ms, 99))
+
+    @property
+    def mean_ms(self) -> float:
+        return statistics.mean(self.latencies_ms) if self.latencies_ms else 0.0
+
+    @property
+    def qps(self) -> float:
+        total_s = sum(self.latencies_ms) / 1000.0
+        return len(self.latencies_ms) / total_s if total_s > 0 else 0.0
+
+
+# ── Data generation ────────────────────────────────────────────────
+
+def generate_vectors(n: int, dim: int, seed: int = 42) -> np.ndarray:
+    """Generate normalised random vectors simulating text embeddings."""
+    rng = np.random.default_rng(seed)
+    vecs = rng.standard_normal((n, dim)).astype(np.float32)
+    norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+    return vecs / np.maximum(norms, 1e-9)
+
+
+def generate_payloads(n: int) -> list[dict]:
+    """Generate metadata payloads simulating document chunks."""
+    sources  = ["confluence", "github_wiki", "runbook", "postmortem"]
+    return [
+        {
+            "doc_id":    f"doc_{i:07d}",
+            "source":    sources[i % len(sources)],
+            "chunk_idx": i % 10,
+            "version":   "v1",
+        }
+        for i in range(n)
+    ]
+
+
+# ── Qdrant backend ─────────────────────────────────────────────────
+
+def benchmark_qdrant(cfg: BenchmarkConfig, vectors: np.ndarray,
+                     queries: np.ndarray) -> BenchmarkResult:
+    try:
+        from qdrant_client import QdrantClient
+        from qdrant_client.models import (
+            Distance, VectorParams, PointStruct, Filter,
+        )
+    except ImportError:
+        return BenchmarkResult("qdrant", cfg.n_vectors, cfg.n_queries, cfg.top_k,
+                               0.0, error="qdrant-client not installed")
+
+    result = BenchmarkResult("qdrant", cfg.n_vectors, cfg.n_queries,
+                             cfg.top_k, 0.0)
+    try:
+        client = QdrantClient(host="localhost", port=6333, timeout=30)
+
+        # Recreate collection
+        client.recreate_collection(
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(size=cfg.dimension, distance=Distance.COSINE),
+        )
+
+        # Index
+        payloads = generate_payloads(cfg.n_vectors)
+        t0 = time.perf_counter()
+        for start in range(0, cfg.n_vectors, cfg.batch_size):
+            end = min(start + cfg.batch_size, cfg.n_vectors)
+            points = [
+                PointStruct(id=i, vector=vectors[i].tolist(), payload=payloads[i])
+                for i in range(start, end)
+            ]
+            client.upsert(collection_name=COLLECTION_NAME, points=points)
+        result.index_time_s = time.perf_counter() - t0
+        print(f"  [qdrant] indexed {cfg.n_vectors:,} vectors in {result.index_time_s:.1f}s")
+
+        # Warm-up
+        for q in queries[:cfg.warmup_queries]:
+            client.search(COLLECTION_NAME, query_vector=q.tolist(), limit=cfg.top_k)
+
+        # Benchmark
+        for q in queries:
+            t0 = time.perf_counter()
+            client.search(COLLECTION_NAME, query_vector=q.tolist(), limit=cfg.top_k)
+            result.latencies_ms.append((time.perf_counter() - t0) * 1000)
+
+        client.delete_collection(COLLECTION_NAME)
+
+    except Exception as e:
+        result.error = str(e)
+    return result
+
+
+# ── Weaviate backend ────────────────────────────────────────────────
+
+def benchmark_weaviate(cfg: BenchmarkConfig, vectors: np.ndarray,
+                       queries: np.ndarray) -> BenchmarkResult:
+    try:
+        import weaviate
+    except ImportError:
+        return BenchmarkResult("weaviate", cfg.n_vectors, cfg.n_queries, cfg.top_k,
+                               0.0, error="weaviate-client not installed")
+
+    result = BenchmarkResult("weaviate", cfg.n_vectors, cfg.n_queries,
+                             cfg.top_k, 0.0)
+    try:
+        client = weaviate.Client("http://localhost:8080")
+
+        # Recreate class
+        class_name = "Benchmark"
+        if client.schema.exists(class_name):
+            client.schema.delete_class(class_name)
+        client.schema.create_class({
+            "class": class_name,
+            "vectorizer": "none",
+            "properties": [
+                {"name": "doc_id",    "dataType": ["text"]},
+                {"name": "source",    "dataType": ["text"]},
+                {"name": "chunk_idx", "dataType": ["int"]},
+            ],
+        })
+
+        # Index
+        payloads = generate_payloads(cfg.n_vectors)
+        t0 = time.perf_counter()
+        with client.batch(batch_size=cfg.batch_size) as batch:
+            for i in range(cfg.n_vectors):
+                batch.add_data_object(
+                    data_object=payloads[i],
+                    class_name=class_name,
+                    vector=vectors[i].tolist(),
+                )
+        result.index_time_s = time.perf_counter() - t0
+        print(f"  [weaviate] indexed {cfg.n_vectors:,} vectors in {result.index_time_s:.1f}s")
+
+        # Warm-up
+        for q in queries[:cfg.warmup_queries]:
+            client.query.get(class_name).with_near_vector(
+                {"vector": q.tolist()}
+            ).with_limit(cfg.top_k).do()
+
+        # Benchmark
+        for q in queries:
+            t0 = time.perf_counter()
+            client.query.get(class_name).with_near_vector(
+                {"vector": q.tolist()}
+            ).with_limit(cfg.top_k).do()
+            result.latencies_ms.append((time.perf_counter() - t0) * 1000)
+
+        client.schema.delete_class(class_name)
+
+    except Exception as e:
+        result.error = str(e)
+    return result
+
+
+# ── Milvus backend ──────────────────────────────────────────────────
+
+def benchmark_milvus(cfg: BenchmarkConfig, vectors: np.ndarray,
+                     queries: np.ndarray) -> BenchmarkResult:
+    try:
+        from pymilvus import (
+            connections, Collection, CollectionSchema,
+            FieldSchema, DataType, utility,
+        )
+    except ImportError:
+        return BenchmarkResult("milvus", cfg.n_vectors, cfg.n_queries, cfg.top_k,
+                               0.0, error="pymilvus not installed")
+
+    result = BenchmarkResult("milvus", cfg.n_vectors, cfg.n_queries,
+                             cfg.top_k, 0.0)
+    try:
+        connections.connect(host="localhost", port="19530")
+
+        if utility.has_collection(COLLECTION_NAME):
+            utility.drop_collection(COLLECTION_NAME)
+
+        schema = CollectionSchema(fields=[
+            FieldSchema("id",        DataType.INT64,       is_primary=True),
+            FieldSchema("vector",    DataType.FLOAT_VECTOR, dim=cfg.dimension),
+            FieldSchema("source",    DataType.VARCHAR,     max_length=64),
+            FieldSchema("chunk_idx", DataType.INT64),
+        ])
+        collection = Collection(COLLECTION_NAME, schema)
+
+        # Index
+        payloads = generate_payloads(cfg.n_vectors)
+        t0 = time.perf_counter()
+        for start in range(0, cfg.n_vectors, cfg.batch_size):
+            end = min(start + cfg.batch_size, cfg.n_vectors)
+            collection.insert([
+                list(range(start, end)),
+                vectors[start:end].tolist(),
+                [p["source"] for p in payloads[start:end]],
+                [p["chunk_idx"] for p in payloads[start:end]],
+            ])
+        collection.create_index("vector", {
+            "index_type": "IVF_FLAT",
+            "metric_type": "IP",
+            "params": {"nlist": 1024},
+        })
+        collection.load()
+        result.index_time_s = time.perf_counter() - t0
+        print(f"  [milvus] indexed {cfg.n_vectors:,} vectors in {result.index_time_s:.1f}s")
+
+        search_params = {"metric_type": "IP", "params": {"nprobe": 16}}
+
+        # Warm-up
+        for q in queries[:cfg.warmup_queries]:
+            collection.search([q.tolist()], "vector", search_params, limit=cfg.top_k)
+
+        # Benchmark
+        for q in queries:
+            t0 = time.perf_counter()
+            collection.search([q.tolist()], "vector", search_params, limit=cfg.top_k)
+            result.latencies_ms.append((time.perf_counter() - t0) * 1000)
+
+        utility.drop_collection(COLLECTION_NAME)
+
+    except Exception as e:
+        result.error = str(e)
+    return result
+
+
+# ── Dry-run backend (no real DB) ────────────────────────────────────
+
+def benchmark_dryrun(name: str, cfg: BenchmarkConfig,
+                     latency_p50: float, jitter: float = 0.3) -> BenchmarkResult:
+    """Simulate benchmark results for testing without a running database."""
+    rng = np.random.default_rng(42)
+    latencies = rng.lognormal(
+        mean=np.log(latency_p50),
+        sigma=jitter,
+        size=cfg.n_queries,
+    ).tolist()
+    return BenchmarkResult(
+        backend=f"{name} (simulated)",
+        n_vectors=cfg.n_vectors,
+        n_queries=cfg.n_queries,
+        top_k=cfg.top_k,
+        index_time_s=cfg.n_vectors / 50_000,
+        latencies_ms=latencies,
+    )
+
+
+# ── Reporting ──────────────────────────────────────────────────────
+
+def print_report(results: list[BenchmarkResult], cfg: BenchmarkConfig) -> None:
+    print("\n" + "=" * 72)
+    print(f"  Vector DB Benchmark — {cfg.n_vectors:,} vectors · "
+          f"{cfg.n_queries:,} queries · top-{cfg.top_k} · dim={cfg.dimension}")
+    print("=" * 72)
+    header = f"  {'Backend':<24} {'Index(s)':>8}  {'Mean':>7}  {'P50':>7}  {'P95':>7}  {'P99':>7}  {'QPS':>7}"
+    print(header)
+    print("  " + "-" * 68)
+
+    # Sort by p99 ascending
+    valid = [r for r in results if not r.error]
+    errored = [r for r in results if r.error]
+
+    for r in sorted(valid, key=lambda x: x.p99_ms):
+        print(f"  {r.backend:<24} {r.index_time_s:>8.1f}  "
+              f"{r.mean_ms:>6.1f}ms  {r.p50_ms:>6.1f}ms  "
+              f"{r.p95_ms:>6.1f}ms  {r.p99_ms:>6.1f}ms  {r.qps:>6.0f}")
+
+    for r in errored:
+        print(f"  {r.backend:<24}  ERROR: {r.error}")
+
+    if valid:
+        winner = min(valid, key=lambda x: x.p99_ms)
+        print(f"\n  ✓ Lowest P99 latency: {winner.backend} ({winner.p99_ms:.1f}ms)")
+        print(f"    → ADR-007 benchmark target: ≤10ms P99 for top-{cfg.top_k}")
+
+    print("=" * 72)
+
+
+def export_csv(results: list[BenchmarkResult], path: str) -> None:
+    import csv
+    with open(path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["backend", "n_vectors", "n_queries", "top_k",
+                         "index_time_s", "mean_ms", "p50_ms", "p95_ms",
+                         "p99_ms", "qps", "error"])
+        for r in results:
+            writer.writerow([
+                r.backend, r.n_vectors, r.n_queries, r.top_k,
+                f"{r.index_time_s:.3f}",
+                f"{r.mean_ms:.3f}", f"{r.p50_ms:.3f}",
+                f"{r.p95_ms:.3f}", f"{r.p99_ms:.3f}",
+                f"{r.qps:.1f}", r.error or "",
+            ])
+    print(f"\n  Results exported to: {path}")
+
+
+# ── CLI ────────────────────────────────────────────────────────────
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Vector database benchmark for ADR-007 evaluation",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument("--backends", nargs="+",
+                        choices=["qdrant", "weaviate", "milvus"],
+                        default=["qdrant", "weaviate", "milvus"],
+                        help="Backends to benchmark (default: all three)")
+    parser.add_argument("--n-vectors", type=int, default=1_000_000,
+                        help="Number of vectors to index (default: 1_000_000)")
+    parser.add_argument("--n-queries", type=int, default=1_000,
+                        help="Number of search queries (default: 1_000)")
+    parser.add_argument("--top-k", type=int, default=TOP_K,
+                        help=f"Top-K results per query (default: {TOP_K})")
+    parser.add_argument("--batch-size", type=int, default=1_000,
+                        help="Upsert batch size (default: 1_000)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Simulate results without real DB connections")
+    parser.add_argument("--export-csv", metavar="PATH",
+                        help="Export results to CSV file")
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    cfg = BenchmarkConfig(
+        n_vectors=args.n_vectors,
+        n_queries=args.n_queries,
+        top_k=args.top_k,
+        batch_size=args.batch_size,
+    )
+
+    if args.dry_run:
+        print("Dry-run mode — generating simulated results\n")
+        # Simulated P99 values match ADR-007 comparison table
+        results = [
+            benchmark_dryrun("qdrant",   cfg, latency_p50=5.0),
+            benchmark_dryrun("weaviate", cfg, latency_p50=8.0),
+            benchmark_dryrun("milvus",   cfg, latency_p50=7.0),
+        ]
+    else:
+        print(f"Generating {cfg.n_vectors:,} vectors (dim={cfg.dimension})...")
+        vectors = generate_vectors(cfg.n_vectors, cfg.dimension)
+        queries = generate_vectors(cfg.n_queries, cfg.dimension, seed=99)
+        print(f"Running benchmarks: {args.backends}\n")
+
+        results = []
+        backend_fns = {
+            "qdrant":   lambda: benchmark_qdrant(cfg, vectors, queries),
+            "weaviate": lambda: benchmark_weaviate(cfg, vectors, queries),
+            "milvus":   lambda: benchmark_milvus(cfg, vectors, queries),
+        }
+        for name in args.backends:
+            print(f"Benchmarking {name}...")
+            results.append(backend_fns[name]())
+
+    print_report(results, cfg)
+
+    if args.export_csv:
+        export_csv(results, args.export_csv)
+
+
+if __name__ == "__main__":
+    main()
 ```
 
 **ADR management tooling:**
@@ -621,4 +1075,4 @@ python scripts/adr.py accept ADR-001-embedding-model-selection.md
 
 ---
 
-[« Back to layouts_repositories Index](index.md) | [🏠 Home](../../index.md)
+[« Back to layouts_repositories Index](index.md) | [🏠 Home](../index.md)

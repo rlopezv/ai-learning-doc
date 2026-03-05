@@ -24,7 +24,7 @@
   - [4.2 Index Lifecycle Service](embedding-and-index-platform.md#42-index-lifecycle-service)
   - [4.3 Multi-Tenant Index Isolation](embedding-and-index-platform.md#43-multi-tenant-index-isolation)
   - [4.4 Java Integration Patterns](embedding-and-index-platform.md#44-java-integration-patterns)
-  - [🧪 Hands-on Lab: Minimal AI Platform](embedding-and-index-platform.md#-hands-on-lab-minimal-ai-platform)
+  - [🧪 Hands-on Lab: Minimal AI Platform](embedding-and-index-platform.md#hands-on-lab-minimal-ai-platform)
 - [Chapter 5 — Platform Observability and Cost Management](platform-observability-and-cost-management.md)
   - [5.1 Platform Metrics Taxonomy](platform-observability-and-cost-management.md#51-platform-metrics-taxonomy)
   - [5.2 Cost Attribution and Budgets](platform-observability-and-cost-management.md#52-cost-attribution-and-budgets)

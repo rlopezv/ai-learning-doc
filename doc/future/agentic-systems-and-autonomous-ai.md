@@ -335,4 +335,4 @@ AGENT_SAFETY_PRINCIPLES = [
 ---
 
 ---
-[« Back to future Index](index.md) | [🏠 Home](../../index.md)
+[« Back to future Index](index.md) | [🏠 Home](../index.md)

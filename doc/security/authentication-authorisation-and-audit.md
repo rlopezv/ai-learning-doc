@@ -638,7 +638,7 @@ python security_pipeline.py
 ---
 
 > **Navigation**
-> [← Part XIII — Observability](part_13_observability.md) | [→ Part XV — Governance](part_15_governance.md)
+> [← Part XIII — Observability](../observability/index.md) | [→ Part XV — Governance](../governance/index.md)
 
 ---
-[« Back to security Index](index.md) | [🏠 Home](../../index.md)
+[« Back to security Index](index.md) | [🏠 Home](../index.md)

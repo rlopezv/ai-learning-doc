@@ -266,4 +266,4 @@ At P99, multi-stage retrieval with cross-encoder reranking typically adds 100–
 ---
 
 ---
-[« Back to advanced_rag Index](index.md) | [🏠 Home](../../index.md)
+[« Back to advanced_rag Index](index.md) | [🏠 Home](../index.md)

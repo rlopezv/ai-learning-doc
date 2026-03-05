@@ -182,4 +182,4 @@ def record_index_lineage(
 ---
 
 ---
-[« Back to artifact_engineering Index](index.md) | [🏠 Home](../../index.md)
+[« Back to artifact_engineering Index](index.md) | [🏠 Home](../index.md)
