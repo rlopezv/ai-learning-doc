@@ -302,6 +302,13 @@ class AIBacklogItem:
 
 ## References
 
+### Source Code Management
+- [GitHub](https://docs.github.com) — Industry-standard SCM; GitHub Actions provides native CI/CD tightly integrated with the repository.
+- [GitLab](https://docs.gitlab.com) — Unified DevSecOps platform: SCM + built-in CI/CD pipelines + container registry + package registry in a single tool. 🔓 Self-hosted via GitLab CE.
+- [Bitbucket](https://support.atlassian.com/bitbucket-cloud/) — Atlassian's SCM; integrates natively with Jira for ticket-to-commit traceability.
+- [Gitea](https://docs.gitea.com) — 🔓 Lightweight self-hosted Git service; supports Gitea Actions (GitHub Actions-compatible syntax) for air-gapped environments.
+- [Azure DevOps Repos](https://learn.microsoft.com/en-us/azure/devops/repos/) — Microsoft's enterprise SCM; integrates with Azure Pipelines and Azure Boards.
+
 ### Documentation
 - [LangSmith Experiment Tracking](https://docs.smith.langchain.com) — Experiment management for LLM systems.
 - [MLflow Tracking](https://mlflow.org/docs/latest/tracking.html) — Experiment tracking and comparison.
@@ -330,6 +337,222 @@ Continuous Integration for LLM systems extends the traditional definition — "e
 | **Lint** | Code style | Prompt format validation, schema validation |
 
 The goal is to ensure that no change reaches production without demonstrably maintaining or improving quality across all relevant dimensions.
+
+---
+
+### 2.1a Tooling Landscape: SCM, CI/CD, and Artifact Management
+
+Every AI SDLC pipeline rests on three infrastructure categories: source control, CI/CD execution, and artifact storage. The table below maps the traditional enterprise tooling against the patterns used throughout this book.
+
+#### Source Control Management (SCM)
+
+| Platform | Hosting | Notable for AI SDLC | On-premise |
+|---|---|---|---|
+| **GitHub** | Cloud | GitHub Actions; Codespaces for notebook-based development; native integration with GitHub Packages | GitHub Enterprise Server |
+| **GitLab** | Cloud / Self | Built-in CI/CD, Container Registry, Package Registry, and Model Experiments (MLflow-compatible) in one product | GitLab CE / EE |
+| **Bitbucket** | Cloud / Self | Bitbucket Pipelines; native Jira integration for requirement traceability | Bitbucket Data Center |
+| **Azure DevOps** | Cloud / Self | Azure Pipelines; natively integrates with Azure ML, Azure Container Registry | Azure DevOps Server |
+| **Gitea** | Self-only | Lightweight; Gitea Actions (GitHub-compatible YAML); ideal for air-gapped environments | ✓ All deployments |
+
+Branching strategy recommendation for AI systems: **trunk-based development** with short-lived feature branches (< 2 days). Long-lived prompt branches accumulate drift against the main corpus and are hard to evaluate in isolation.
+
+#### CI/CD Execution
+
+| Platform | Hosting | Strengths | Typical use |
+|---|---|---|---|
+| **GitHub Actions** | Cloud | Zero setup; large action marketplace; matrix builds for multi-model eval | Most cloud-native AI teams |
+| **GitLab CI/CD** | Cloud / Self | Tight SCM integration; Docker-in-Docker; built-in caching | Enterprise GitLab adopters |
+| **Jenkins** | Self-only | Maximum flexibility; Groovy-based pipelines; large plugin ecosystem | On-premise / air-gapped |
+| **Azure Pipelines** | Cloud / Self | YAML pipelines; tight Azure ML integration; hosted GPU agents | Azure-native organisations |
+| **CircleCI** | Cloud | Fast caching; simple YAML; good Docker support | Startups, SaaS teams |
+| **Argo Workflows** | Self (K8s) | Kubernetes-native DAG pipelines; ideal for heavy ingestion jobs | Platform teams on K8s |
+
+For the CI pipeline examples in section 2.2 (GitHub Actions YAML), the equivalent GitLab CI and Jenkins equivalents are:
+
+```yaml
+# GitLab CI equivalent of the GitHub Actions CI pipeline
+# .gitlab-ci.yml
+
+stages: [lint, test, evaluate, build, deploy]
+
+variables:
+  PYTHON_VERSION: "3.11"
+  EVAL_THRESHOLD_RECALL: "0.80"
+
+lint-prompts:
+  stage: lint
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install pyyaml jsonschema
+    - python scripts/validate_prompts.py prompts/
+  only: [merge_requests, main]
+
+unit-tests:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install -r requirements-dev.txt
+    - pytest tests/unit/ -v --tb=short
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+evaluate-rag:
+  stage: evaluate
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install -r requirements-dev.txt
+    - python scripts/run_evaluation.py --threshold ${EVAL_THRESHOLD_RECALL}
+  artifacts:
+    paths: [eval_results/]
+    expire_in: 30 days
+  allow_failure: false   # Blocks merge if evaluation fails
+
+build-docker:
+  stage: build
+  image: docker:24
+  services: [docker:24-dind]
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} apps/api/
+    - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}
+  only: [main]
+```
+
+```groovy
+// Jenkins declarative pipeline equivalent
+// Jenkinsfile
+
+pipeline {
+    agent { label 'python-3.11' }
+    environment {
+        EVAL_THRESHOLD_RECALL = '0.80'
+        REGISTRY = 'registry.company.com'
+    }
+    stages {
+        stage('Lint') {
+            steps {
+                sh 'python scripts/validate_prompts.py prompts/'
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                sh 'pytest tests/unit/ -v --junitxml=test-results.xml'
+            }
+            post {
+                always {
+                    junit 'test-results.xml'
+                }
+            }
+        }
+        stage('Evaluate RAG') {
+            steps {
+                sh 'python scripts/run_evaluation.py --threshold ${EVAL_THRESHOLD_RECALL}'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'eval_results/**'
+                }
+                failure {
+                    error 'Evaluation gate failed — blocking deployment'
+                }
+            }
+        }
+        stage('Build & Push') {
+            when { branch 'main' }
+            steps {
+                sh """
+                    docker build -t ${REGISTRY}/rag-api:${GIT_COMMIT} apps/api/
+                    docker push ${REGISTRY}/rag-api:${GIT_COMMIT}
+                """
+            }
+        }
+    }
+}
+```
+
+#### Artifact and Package Management
+
+AI systems produce multiple artifact types beyond compiled code: Docker images, Python packages (internal libraries), model weights, embedding models, and prompt registries. Each requires a dedicated storage strategy.
+
+| Artifact type | Recommended store | On-premise alternative |
+|---|---|---|
+| **Docker images** | AWS ECR / GCP Artifact Registry / GitHub Packages | Harbor (OSS) · GitLab Container Registry |
+| **Python packages** | PyPI (public) / AWS CodeArtifact / GitHub Packages | JFrog Artifactory · Sonatype Nexus Repository |
+| **Java/Maven artifacts** | Maven Central (public) / AWS CodeArtifact / GitHub Packages | JFrog Artifactory OSS · Sonatype Nexus OSS |
+| **ML model weights** | Hugging Face Hub · MLflow Model Registry · AWS S3 | MinIO + MLflow · JFrog Artifactory (large file support) |
+| **Prompt templates** | Git-tracked YAML (recommended) + prompt service DB | Same — prompts are code |
+| **Embedding model files** | S3/GCS object storage + CDN | MinIO · Nexus Raw Repository |
+| **Corpus snapshots** | S3/GCS versioned bucket | MinIO with versioning enabled |
+
+```python
+# artifact_registry.py — Unified artifact versioning across stores
+from dataclasses import dataclass
+from enum import Enum
+from typing import Optional
+
+class ArtifactStore(str, Enum):
+    ECR               = "ecr"          # AWS Elastic Container Registry
+    GITHUB_PACKAGES   = "ghcr"         # GitHub Container Registry
+    HARBOR            = "harbor"       # 🔓 On-premise Harbor
+    ARTIFACTORY       = "artifactory"  # JFrog Artifactory
+    NEXUS             = "nexus"        # 🔓 Sonatype Nexus
+    CODE_ARTIFACT     = "codeartifact" # AWS CodeArtifact (Python/Maven)
+    GITLAB_REGISTRY   = "gitlab"       # GitLab Container + Package Registry
+    MINIO             = "minio"        # 🔓 On-premise S3-compatible
+
+@dataclass
+class ArtifactCoordinates:
+    """Uniquely identifies an artifact across any store."""
+    store: ArtifactStore
+    registry_host: str
+    namespace: str          # org or project
+    name: str               # image/package name
+    tag: str                # semantic version or git SHA
+    digest: Optional[str]   # SHA256 digest for immutable pinning
+
+    @property
+    def full_reference(self) -> str:
+        """Returns the pull/push reference for this artifact."""
+        if self.store in (ArtifactStore.ECR, ArtifactStore.HARBOR,
+                          ArtifactStore.GITHUB_PACKAGES, ArtifactStore.GITLAB_REGISTRY):
+            return f"{self.registry_host}/{self.namespace}/{self.name}:{self.tag}"
+        if self.store == ArtifactStore.NEXUS:
+            # Maven-style: groupId:artifactId:version
+            return f"{self.namespace}:{self.name}:{self.tag}"
+        return f"{self.name}:{self.tag}"
+
+    @property
+    def immutable_reference(self) -> Optional[str]:
+        """Returns digest-pinned reference (preferred for production deployments)."""
+        if self.digest:
+            return f"{self.registry_host}/{self.namespace}/{self.name}@{self.digest}"
+        return None
+
+# Production artifact promotion example
+ARTIFACT_LIFECYCLE = {
+    "development": ArtifactCoordinates(
+        ArtifactStore.HARBOR, "harbor.internal", "ai-platform", "rag-api",
+        tag="feature-hybrid-search-a3f9c2", digest=None
+    ),
+    "staging": ArtifactCoordinates(
+        ArtifactStore.HARBOR, "harbor.internal", "ai-platform", "rag-api",
+        tag="rc-2.4.0", digest="sha256:a1b2c3d4e5f6..."
+    ),
+    "production": ArtifactCoordinates(
+        ArtifactStore.HARBOR, "harbor.internal", "ai-platform", "rag-api",
+        tag="2.4.0", digest="sha256:a1b2c3d4e5f6..."  # Same digest — promoted, not rebuilt
+    ),
+}
+
+# Key principle: promote artifacts between environments rather than rebuilding.
+# The staging and production images are identical (same digest); only the tag changes.
+# This eliminates environment-specific build bugs and simplifies rollback.
+```
+
+> **🔓 On-premise artifact stack:** For air-gapped environments, the recommended combination is **Harbor** (container images) + **Sonatype Nexus OSS** or **JFrog Artifactory OSS** (Python packages, Maven/Gradle artifacts, raw files) + **MinIO** (model weights, corpus snapshots). All three are open-source and can run as Kubernetes StatefulSets.
 
 ---
 
@@ -893,12 +1116,34 @@ class DeploymentMonitor:
 
 ## References
 
-### Documentation
-- [GitHub Actions](https://docs.github.com/en/actions) — CI/CD pipeline for AI systems.
-- [RAGAS Documentation](https://docs.ragas.io) — Automated RAG evaluation metrics.
-- [MLflow Evaluation](https://mlflow.org/docs/latest/llms/llm-evaluate/index.html) — LLM evaluation tracking.
+### CI/CD Platforms
+- [GitHub Actions](https://docs.github.com/en/actions) — Cloud CI/CD tightly integrated with GitHub SCM; large action marketplace.
+- [GitLab CI/CD](https://docs.gitlab.com/ee/ci/) — Built-in CI/CD in GitLab; `.gitlab-ci.yml` syntax; includes built-in container and package registry.
+- [Jenkins](https://www.jenkins.io/doc/) — 🔓 Self-hosted, open-source; Groovy-based declarative pipelines; extensive plugin ecosystem.
+- [Azure Pipelines](https://learn.microsoft.com/en-us/azure/devops/pipelines/) — YAML pipelines; integrates with Azure ML and Azure Container Registry.
+- [CircleCI](https://circleci.com/docs/) — Cloud CI with strong Docker caching and parallelism support.
+- [Argo Workflows](https://argoproj.github.io/workflows/) — Kubernetes-native DAG workflows; ideal for heavyweight ingestion and evaluation jobs.
+
+### Artifact and Package Management
+- [JFrog Artifactory](https://jfrog.com/artifactory/) — Universal artifact repository: Docker, Maven, PyPI, npm, Helm, raw files. Cloud and 🔓 on-premise.
+- [Sonatype Nexus Repository](https://www.sonatype.com/products/nexus-repository) — 🔓 OSS edition supports Maven, npm, PyPI, Docker, raw. Enterprise edition adds advanced security.
+- [Harbor](https://goharbor.io/docs/) — 🔓 CNCF container registry with vulnerability scanning, RBAC, and replication.
+- [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/) — Managed Maven, Gradle, npm, and PyPI repository on AWS.
+- [GitHub Packages](https://docs.github.com/en/packages) — Container and package registry tightly integrated with GitHub Actions.
+- [GitLab Package Registry](https://docs.gitlab.com/ee/user/packages/package_registry/) — Supports Maven, PyPI, npm, Docker — all within a single GitLab project.
+
+### Quality and Security Scanning
+- [SonarQube](https://docs.sonarsource.com/sonarqube/) — 🔓 Static analysis for code quality and security; integrates with GitHub, GitLab, Jenkins.
+- [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/) — 🔓 Detects known-vulnerable dependencies in Java/Python projects.
+- [Trivy](https://trivy.dev) — 🔓 Container and filesystem vulnerability scanner; integrates into any CI pipeline.
+
+### GitOps and Deployment
 - [Argo CD](https://argo-cd.readthedocs.io) — GitOps continuous delivery for Kubernetes.
 - [Flagger](https://docs.flagger.app) — Progressive delivery with automated canary analysis.
+
+### Documentation
+- [RAGAS Documentation](https://docs.ragas.io) — Automated RAG evaluation metrics.
+- [MLflow Evaluation](https://mlflow.org/docs/latest/llms/llm-evaluate/index.html) — LLM evaluation tracking.
 
 ### Papers
 - [Continuous Delivery for Machine Learning](https://martinfowler.com/articles/cd4ml.html) — Sato, Wider & Windheuser, 2019.
@@ -1193,7 +1438,14 @@ DEVELOPMENT = EnvironmentSpec(
 
 ## References
 
-### Documentation
+### SCM Workflow and Code Review
+- [GitHub Pull Requests](https://docs.github.com/en/pull-requests) — PR workflow, reviewers, required status checks, and branch protection rules.
+- [GitLab Merge Requests](https://docs.gitlab.com/ee/user/project/merge_requests/) — MR workflow with inline code review and approval rules.
+- [Bitbucket Pull Requests](https://support.atlassian.com/bitbucket-cloud/docs/create-a-pull-request/) — Atlassian's PR workflow with Jira issue linking.
+- [Conventional Commits](https://www.conventionalcommits.org) — Commit message standard enabling automated changelog generation and SemVer bumps.
+- [Semantic Release](https://semantic-release.gitbook.io) — Automated versioning and changelog from commit history; integrates with GitHub/GitLab CI.
+
+### Experiment Tracking
 - [MLflow Tracking](https://mlflow.org/docs/latest/tracking.html) — Experiment tracking and comparison.
 - [Weights & Biases](https://docs.wandb.ai) — Experiment tracking with LLM support.
 - [LangSmith](https://docs.smith.langchain.com) — LangChain experiment tracking and evaluation.
@@ -1627,8 +1879,19 @@ make check-dod FEATURE_ID=RAG-1234
 
 ## References
 
-### Documentation
+### Release Automation
 - [Semantic Versioning](https://semver.org) — Official SemVer specification.
+- [Semantic Release](https://semantic-release.gitbook.io) — Automated version bumps and changelogs from Git commit history.
+- [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) — Release tagging and artefact attachment on GitHub.
+- [GitLab Releases](https://docs.gitlab.com/ee/user/project/releases/) — Release tagging with evidence collection and artefact links.
+
+### Artifact Promotion
+- [JFrog Artifactory — Promoting Artifacts](https://jfrog.com/help/r/jfrog-artifactory-documentation/promoting-a-docker-image) — Artifact promotion workflow between dev/staging/production repositories.
+- [Sonatype Nexus — Staging Suite](https://help.sonatype.com/en/staging-suite.html) — Staging repository workflow for Maven artifacts before promotion to release.
+- [Harbor — Tag Retention and Replication](https://goharbor.io/docs/latest/administration/tag-retention/) — Image lifecycle and cross-registry replication.
+- [AWS CodeArtifact — Publishing Packages](https://docs.aws.amazon.com/codeartifact/latest/ug/packages-overview.html) — Package promotion and upstream caching.
+
+### Progressive Delivery
 - [Flagger Progressive Delivery](https://docs.flagger.app) — Automated canary analysis on Kubernetes.
 - [Argo Rollouts](https://argoproj.github.io/rollouts/) — Kubernetes progressive delivery.
 - [GitHub Actions Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments) — Deployment gates and approvals.
