@@ -164,5 +164,41 @@ Code review checklists must include AI-specific concerns.
 ```markdown
 # AI Code Review Checklist
 
+## Prompt changes
+
+- [ ] Has the prompt been tested against the standard test suite?
+- [ ] Are all new variables declared with descriptions?
+- [ ] Does the prompt version follow semantic versioning?
+- [ ] Is the prompt registered in the prompt registry with this PR?
+- [ ] Does the diff show only intentional changes (no whitespace/newline drift)?
+
+## Retrieval changes
+
+- [ ] Is the embedding model change documented in an ADR?
+- [ ] Has the index been rebuilt with the new configuration?
+- [ ] Has Recall@K been measured before and after?
+- [ ] Are metadata filters consistent with the document schema?
+
+## LLM integration changes
+
+- [ ] Are all LLM calls wrapped in retry logic with exponential backoff?
+- [ ] Is token counting implemented to prevent context overflow?
+- [ ] Are API errors handled gracefully (no bare `except`)?
+- [ ] Is the temperature set appropriately for the task (0 for deterministic)?
+
+## Security
+
+- [ ] Does this change access or log any user content that was not logged before?
+- [ ] Could the prompt be manipulated by user input (prompt injection)?
+- [ ] Are all API keys referenced via the SecretManager, not hardcoded?
+- [ ] Does this change expand PII processing beyond what's documented?
+
+## Cost
+
+- [ ] Has the token count impact of this change been estimated?
+- [ ] For prompt changes: estimated daily cost delta at current traffic?
+```
+
 ---
+
 [« Back to sdlc Index](index.md) | [🏠 Home](../../index.md)

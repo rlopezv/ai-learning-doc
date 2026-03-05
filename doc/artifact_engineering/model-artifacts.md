@@ -93,6 +93,7 @@ def load_fine_tuned_model(base_model_name: str, adapter_path: str):
 ```
 
 🔓 **On-premise model serving with [Ollama](https://ollama.com):**
+
 ```dockerfile
 # Modelfile — wraps a base model with a custom system prompt
 FROM llama3
@@ -143,5 +144,34 @@ class ModelCard:
         limits = "\n".join([f"- {l}" for l in self.known_limitations])
         return f"""# Model Card: {self.model_id} v{self.model_version}
 
+## Description
+{self.description}
+
+## Intended Use
+{self.intended_use}
+
+## Out of Scope
+{self.out_of_scope_use}
+
+## Training Data
+{self.training_data_description}
+Versions: {", ".join(self.training_data_versions)}
+
+## Evaluation
+| Metric | Score |
+|---|---|
+{evals}
+
+## Known Limitations
+{limits}
+
+## Bias Considerations
+{self.bias_considerations}
+
+*Created: {self.created_at} | License: {self.license}*
+"""
+```
+
 ---
+
 [« Back to artifact_engineering Index](index.md) | [🏠 Home](../../index.md)
