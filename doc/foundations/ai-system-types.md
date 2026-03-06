@@ -4,85 +4,327 @@
 
 ## Context
 
-This chapter introduces a practical classification of modern AI systems based on how they **access knowledge** and how much **autonomy they exercise during execution**. While previous chapters explored the paradigm shift from deterministic software to machine learning and large language models, this chapter focuses on how these technologies are assembled into real-world systems.
+AI systems can be organized into different architectural types depending on how models are used, how information flows through the system, and how decisions are orchestrated.
 
-Understanding system types helps architects select the appropriate architecture for a given problem. Different designs offer different trade-offs in terms of reliability, flexibility, complexity, and operational cost.
+Understanding these system types is essential for **AI Systems Engineering** because most real-world applications are not simply model calls. Instead, they are **composed systems** built from multiple components such as prompts, retrieval pipelines, orchestration workflows, and external tools.
 
-This classification also prepares the reader for the next part of the book, where these patterns are explored in greater architectural depth.
+This chapter introduces the primary architectural categories used in modern AI systems and explains how they differ in complexity, capability, and engineering requirements.
+
+These system types primarily occupy the **Application**, **Orchestration**, **Prompt**, and **Retrieval** layers of the **AI Systems Reference Stack** introduced in the previous chapter.
+
+The goal of this chapter is to provide a mental model for understanding how AI systems evolve from simple prompt-driven applications to more complex architectures involving retrieval, workflows, and autonomous agents.
 
 ---
 
 ## Concept Overview
 
-AI applications built on large language models can be categorized by two primary dimensions:
+An **AI system architecture** defines how models, data sources, tools, and orchestration logic interact to produce system behavior.
 
-- **Knowledge access** — whether the system relies only on the model's internal knowledge or accesses external data sources.
-- **Execution autonomy** — whether the system follows a fixed workflow or dynamically decides which actions to perform.
+Modern AI applications can be grouped into several architectural system types based on how the model interacts with context, data sources, and tools.
 
-These two dimensions produce several recognizable system patterns.
+```
 
-```text
 AI System Types
 │
 ├ Prompt-Based Systems
+│
 ├ Retrieval-Augmented Systems (RAG)
-├ Tool-Augmented Systems
-├ Workflow Systems
-├ Agent Systems
-└ Hybrid Systems
+│
+├ Workflow-Based Systems
+│
+└ Agent Systems
+
 ```
 
-Each type represents a different level of architectural sophistication and operational complexity.
+These categories represent **increasing architectural complexity and capability**.
 
-**Key Concept — Knowledge Access vs Autonomy**
+| System Type         | Key Capability           | Typical Components          |
+| ------------------- | ------------------------ | --------------------------- |
+| Prompt-Based        | Direct model interaction | Prompt + model              |
+| Retrieval-Augmented | External knowledge       | Retriever + vector database |
+| Workflow Systems    | Structured orchestration | Pipelines + tool execution  |
+| Agent Systems       | Autonomous reasoning     | Planning + tools + memory   |
 
-AI systems differ primarily in **how they obtain knowledge** and **how decisions about actions are made**. Simpler systems rely solely on model knowledge and fixed prompts. More advanced systems incorporate retrieval pipelines, external tools, or dynamic planning.
+Each system type builds upon the capabilities of the previous one.
 
 ---
 
 ## 4.1 Prompt-Based Systems
 
-Prompt-based systems represent the simplest form of LLM-powered applications.
+Prompt-based systems are the simplest type of AI application.
 
-In these systems, the model receives instructions directly through prompts and produces a response without interacting with external systems.
+In these systems, the application constructs a prompt and sends it directly to a language model. The model generates a response based solely on the provided prompt and its internal knowledge.
 
-Typical architecture:
+Example architecture:
 
-```text
+```
+
 User Input
 ↓
 Prompt Template
 ↓
-LLM
+Model
 ↓
-Generated Response
+Response
+
 ```
 
-These systems are easy to build and deploy but have several limitations:
+Typical characteristics:
 
-- knowledge is limited to the model's training data
-- responses may become outdated
-- hallucination risk is higher
+- minimal system complexity
+- no external knowledge sources
+- fast implementation
+- limited controllability
 
-Common use cases include:
+Examples include:
 
-- content generation
-- text summarization
-- brainstorming tools
-- basic chat assistants
+- simple chatbots
+- text summarization tools
+- code generation assistants
+- basic content generation applications
 
-Prompt-based systems are useful for narrow tasks but rarely sufficient for knowledge-intensive applications.
+Although prompt-based systems are easy to build, they have important limitations:
+
+- knowledge limited to model training data
+- hallucination risk
+- difficulty enforcing consistent structure
+- lack of access to private or up-to-date information
+
+Because of these limitations, most production systems extend this architecture using **retrieval pipelines**.
 
 ---
 
-## 4.2 Retrieval-Augmented Generation (RAG)
+## 4.2 Retrieval-Augmented Systems (RAG)
 
-Retrieval-Augmented Generation systems enhance LLM responses by retrieving relevant information from external knowledge sources.
+Retrieval-Augmented Generation (RAG) systems combine language models with external knowledge sources.
 
-Typical architecture:
+Instead of relying solely on the model's training data, the system retrieves relevant documents and injects them into the prompt as context.
 
-```text
+Example architecture:
+
+```
+
 User Query
+↓
+Retriever
+↓
+Vector Database
+↓
+Relevant Documents
+↓
+Prompt + Context
+↓
+Model
+↓
+Response
+
+```
+
+Key components:
+
+- **embedding model** for vector representation
+- **vector database** for similarity search
+- **retriever** for document selection
+- **context builder** for prompt construction
+
+Advantages of RAG systems:
+
+- access to domain-specific knowledge
+- ability to use private data
+- improved factual accuracy
+- reduced hallucination risk
+
+RAG has become one of the most common architectural patterns for production AI systems.
+
+However, RAG systems also introduce new engineering challenges:
+
+- retrieval quality
+- context window management
+- latency from additional retrieval steps
+- complexity in evaluation
+
+These systems are discussed in depth in the **RAG Engineering** section of the book.
+
+---
+
+## 4.3 Workflow-Based Systems
+
+Workflow systems extend RAG architectures by introducing **structured orchestration pipelines**.
+
+Instead of performing a single model call, the system coordinates multiple steps that may include:
+
+- multiple model calls
+- retrieval operations
+- tool execution
+- data transformations
+- validation steps
+
+Example architecture:
+
+```
+
+User Query
+↓
+Orchestrator
+↓
+Task Decomposition
+↓
+Multiple Processing Steps
+↓
+Tools / APIs
+↓
+Model
+↓
+Final Response
+
+```
+
+Many workflow systems allow models to interact with **external tools**, such as:
+
+- APIs
+- databases
+- search systems
+- calculation engines
+
+Advantages:
+
+- greater control over system behavior
+- ability to combine multiple tools
+- improved reliability
+- structured reasoning pipelines
+
+Typical use cases include:
+
+- document processing pipelines
+- research assistants
+- multi-step analysis systems
+- automated report generation
+
+Workflow systems allow engineers to design **predictable pipelines around probabilistic models**.
+
+Because these systems involve multiple components, **observability and tracing** become important engineering capabilities. Monitoring prompt inputs, tool calls, and intermediate outputs helps engineers debug and evaluate system behavior.
+
+---
+
+## 4.4 Agent Systems
+
+Agent systems represent the most advanced category of AI architectures.
+
+Agents are systems capable of:
+
+- planning tasks
+- selecting tools
+- iteratively reasoning
+- adapting actions based on intermediate results
+
+Unlike workflow systems, where execution steps are predetermined, agents dynamically decide what actions to take.
+
+Example architecture:
+
+```
+
+User Goal
+↓
+Agent
+↓
+Reasoning
+↓
+Tool Selection
+↓
+Action
+↓
+Observation
+↓
+Iteration
+↓
+Final Result
+
+```
+
+Typical agent components include:
+
+- reasoning loop
+- tool interfaces
+- memory systems
+- planning logic
+- execution control
+
+Memory systems may include:
+
+- short-term conversational memory
+- vector-based long-term memory
+- external knowledge storage
+
+Agent systems enable more autonomous behavior, making them useful for tasks such as:
+
+- research automation
+- complex task planning
+- coding assistants
+- multi-step data analysis
+
+However, they also introduce additional challenges:
+
+- unpredictability
+- evaluation difficulty
+- safety risks
+- cost and latency
+
+Because of these challenges, many production systems combine **agent capabilities with structured workflows**.
+
+---
+
+## 4.5 Increasing System Complexity
+
+These system types can be viewed as a progression in architectural sophistication.
+
+```
+
+Prompt Systems
+↓
+RAG Systems
+↓
+Workflow Systems
+↓
+Agent Systems
+
+```
+
+Each stage introduces additional capabilities:
+
+| Property           | Prompt | RAG     | Workflow | Agent     |
+| ------------------ | ------ | ------- | -------- | --------- |
+| External knowledge | ❌     | ✅      | ✅       | ✅        |
+| Tool usage         | ❌     | Limited | ✅       | ✅        |
+| Planning           | ❌     | ❌      | Limited  | ✅        |
+| Autonomy           | ❌     | ❌      | ❌       | High      |
+| System complexity  | Low    | Medium  | High     | Very High |
+
+However, increased capability also introduces trade-offs:
+
+- higher system complexity
+- increased latency
+- greater operational cost
+- more challenging evaluation
+
+Each additional component—retrieval pipelines, orchestration logic, or tool execution—adds processing overhead and increases system latency.
+
+Selecting the appropriate system type depends on the **requirements and constraints of the application**.
+
+---
+
+## 4.6 Hybrid Architectures
+
+Most real-world AI systems combine multiple architectural patterns.
+
+Example hybrid architecture:
+
+```
+
+User Query
+↓
+Application Layer
+↓
+Workflow Orchestrator
 ↓
 Retriever
 ↓
@@ -90,277 +332,97 @@ Vector Database
 ↓
 Context Builder
 ↓
-LLM
+Model
+↓
+Tool Calls
 ↓
 Response
+
 ```
 
-Instead of relying solely on model knowledge, the system dynamically injects relevant context into the prompt.
+This architecture may include elements of:
 
-Benefits include:
+- retrieval systems
+- structured workflows
+- tool usage
+- agent-style reasoning
 
-- access to up-to-date knowledge
-- reduced hallucination
-- improved factual accuracy
-
-Typical use cases:
-
-- enterprise knowledge assistants
-- document search systems
-- technical support agents
-- internal company copilots
-
-RAG systems are among the most common production architectures for LLM applications.
-
----
-
-## 4.3 Tool-Augmented Systems
-
-Tool-augmented systems allow LLMs to interact with external tools such as APIs, databases, or computational services.
-
-Example architecture:
-
-```text
-User Request
-↓
-LLM Reasoning
-↓
-Tool Invocation
-↓
-External System
-↓
-LLM Response
-```
-
-Tools may include:
-
-- search APIs
-- calculators
-- database queries
-- internal microservices
-
-This approach allows models to perform tasks that require deterministic computation or interaction with external systems.
-
-Common examples:
-
-- travel assistants that call booking APIs
-- financial assistants performing calculations
-- coding assistants executing code tools
-
-Tool usage increases system capability but also introduces additional complexity in orchestration and error handling.
-
----
-
-## 4.4 Workflow Systems
-
-Workflow systems introduce explicit orchestration logic that controls how tasks are executed.
-
-Instead of allowing the model to decide every step dynamically, workflows define structured execution paths.
-
-Example workflow:
-
-```text
-User Request
-↓
-Intent Classification
-↓
-Retrieve Documents
-↓
-Generate Answer
-↓
-Post-processing
-```
-
-Advantages of workflow-based architectures:
-
-- improved reliability
-- deterministic execution
-- easier debugging
-- clearer system observability
-
-These systems are commonly used in production environments where predictability and control are critical.
-
----
-
-## 4.5 Agent Systems
-
-Agent systems allow models to dynamically plan and execute multi-step tasks.
-
-Instead of following predefined workflows, the system allows the model to determine which actions to perform.
-
-Typical loop:
-
-```text
-Goal
-↓
-Reason
-↓
-Select Tool
-↓
-Execute Action
-↓
-Observe Result
-↓
-Repeat
-```
-
-This enables systems capable of:
-
-- complex reasoning
-- multi-step planning
-- iterative problem solving
-
-However, agent systems introduce new engineering challenges:
-
-- unpredictable execution paths
-- higher latency
-- more complex monitoring
-- safety considerations
-
-As a result, agents are often used in controlled environments or specialized tasks.
-
----
-
-## 4.6 Hybrid Systems
-
-In practice, most real-world AI applications combine multiple architectural patterns.
-
-For example:
-
-- a **RAG system** may also use **tool invocation**
-- a **workflow system** may integrate **retrieval pipelines**
-- an **agent system** may include structured workflow steps
-
-Hybrid architectures combine the strengths of multiple approaches.
-
-Example hybrid architecture:
-
-```text
-User Query
-↓
-Workflow Orchestrator
-↓
-Retrieval System
-↓
-LLM Reasoning
-↓
-Tool Execution
-↓
-Response
-```
-
-Hybrid systems are the norm in production environments. Pure architectural patterns are primarily conceptual models used to explain system design.
-
----
-
-## 4.7 Decision Heuristics
-
-Selecting the appropriate architecture depends on system requirements.
-
-A useful rule of thumb is to **start with the simplest possible architecture and increase complexity only when necessary**.
-
-Typical progression:
-
-```text
-Prompt
-↓
-RAG
-↓
-Tool-Augmented
-↓
-Workflow
-↓
-Agent
-```
-
-As system complexity increases, so do the challenges in:
+Hybrid architectures allow engineers to balance:
 
 - system reliability
-- latency
-- observability
-- operational cost
+- reasoning flexibility
+- cost efficiency
+- operational complexity
 
-Careful architectural decisions are therefore critical when building production AI systems.
-
----
-
-## 4.8 Trade-offs Between System Types
-
-Different architectures offer different trade-offs.
-
-| System Type    | Strength                      | Limitation                        |
-| -------------- | ----------------------------- | --------------------------------- |
-| Prompt-Based   | Simple and fast to build      | Limited knowledge                 |
-| RAG            | Access to external knowledge  | Requires retrieval infrastructure |
-| Tool-Augmented | Interaction with real systems | Orchestration complexity          |
-| Workflow       | Reliable and controllable     | Reduced flexibility               |
-| Agents         | Highly flexible reasoning     | Harder to control and monitor     |
-
-Understanding these trade-offs helps architects choose the appropriate design for a given problem.
+Designing these systems requires careful consideration of **latency, cost, reliability, and evaluation strategies**.
 
 ---
 
-## 📋 Chapter Summary
+## 4.7 Choosing the Right System Type
 
-- AI systems can be classified by how they **access knowledge** and how much **autonomy** they exercise during execution.
-- Prompt-based systems rely entirely on model knowledge and are suitable for narrow tasks.
-- Retrieval-Augmented Generation (RAG) systems incorporate external knowledge through retrieval pipelines.
-- Tool-augmented systems enable models to interact with external APIs and deterministic services.
-- Workflow systems provide structured orchestration that improves reliability and observability.
-- Agent systems allow dynamic reasoning and planning but introduce operational complexity.
-- Most real-world AI applications are **hybrid systems** that combine multiple architectural patterns.
+Selecting the appropriate system architecture depends on the complexity of the task and the operational requirements of the application.
+
+Prompt-based systems are often sufficient when:
+
+- tasks are simple
+- knowledge requirements are limited
+- latency must be minimal
+
+RAG systems are appropriate when:
+
+- applications require domain knowledge
+- systems must access private or frequently updated data
+- factual accuracy is important
+
+Workflow systems are useful when:
+
+- tasks involve multiple steps
+- systems must interact with external tools
+- greater control over execution is required
+
+Agent systems are most appropriate when:
+
+- problems require dynamic planning
+- tasks involve complex decision-making
+- systems must adapt based on intermediate results
+
+In practice, engineers often begin with simpler architectures and progressively introduce additional capabilities as system requirements grow.
 
 ---
 
-## ❓ Comprehension Questions
+## Chapter Summary
 
-1. Why is classifying AI systems by knowledge access and execution autonomy useful for system architecture design?
+- AI applications can be categorized into several system types based on how models are integrated into system architecture.
+- **Prompt-based systems** are the simplest architectures, relying on direct interaction with language models.
+- **Retrieval-Augmented Generation (RAG)** systems incorporate external knowledge sources to improve accuracy.
+- **Workflow systems** orchestrate multiple steps and tools to perform complex tasks.
+- **Agent systems** introduce autonomous reasoning and dynamic task planning.
+- As systems grow in capability, complexity, latency, and operational cost also increase.
+- Many production AI systems combine multiple architectural patterns into **hybrid architectures**.
 
-2. What are the main differences between prompt-based systems and retrieval-augmented generation systems?
+---
 
-3. In which situations would a workflow-based architecture be preferable to an agent-based system?
+## Comprehension Questions
 
-4. What engineering challenges arise when introducing tool-augmented systems?
-
-5. Why are hybrid architectures common in production AI systems?
+1. What distinguishes prompt-based systems from retrieval-augmented systems?
+2. Why do RAG systems improve factual accuracy compared to prompt-only systems?
+3. How do workflow systems improve reliability in AI applications?
+4. What capabilities differentiate agent systems from workflow-based architectures?
+5. What trade-offs arise as AI system architectures become more complex?
+6. Why are hybrid architectures common in production AI systems?
 
 ---
 
 ## References
 
-### Papers
+- Lewis et al. _Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks_.
+  https://arxiv.org/abs/2005.11401
 
-- Lewis et al. — _Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks_ (2020)
-  [https://arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
+- Yao et al. _ReAct: Synergizing Reasoning and Acting in Language Models_.
+  https://arxiv.org/abs/2210.03629
 
-### Books
+- Shinn et al. _Reflexion: Language Agents with Verbal Reinforcement Learning_.
+  https://arxiv.org/abs/2303.11366
 
-- Chip Huyen — _Designing Machine Learning Systems_ (O'Reilly, 2022)
-
-### Documentation
-
-- OpenAI Platform Documentation
-  [https://platform.openai.com/docs](https://platform.openai.com/docs)
-
-- LangChain Documentation
-  [https://python.langchain.com](https://python.langchain.com)
-
----
-
-## See Also
-
-Related chapters:
-
-- Chapter 3 — Machine Learning vs LLM
-- Chapter 5 — Tokens and Context
-- Chapter 6 — Prompt Engineering
-
----
-
-## Key Takeaways
-
-- AI systems differ primarily in **how they access knowledge and how much autonomy they exercise**.
-- Architectural complexity increases from prompt-based systems to agent systems.
-- Retrieval and tool integration enable LLMs to interact with external knowledge and services.
-- Workflow architectures provide reliability and operational control in production systems.
-- Most real-world deployments use **hybrid architectures combining multiple system patterns**.
+- OpenAI Documentation
+  https://platform.openai.com/docs

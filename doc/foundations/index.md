@@ -1,71 +1,83 @@
-# foundations
-
-[🏠 Back to Home](../index.md)
-
 # Foundations
 
-Artificial Intelligence systems differ fundamentally from traditional software systems. Classical software relies on deterministic rules written in code, while modern AI systems combine models, prompts, data, and orchestration layers to produce behavior that emerges from statistical learning.
+[⬅ Back to Main Table of Contents](../index.md)
 
-This section introduces the conceptual foundations required to understand how modern AI systems are designed, built, and operated in production environments.
+## Context
 
-## Contents
+Modern AI applications are not simply machine learning models exposed through APIs. They are **complex systems** that integrate models, prompts, retrieval pipelines, orchestration logic, and external tools.
 
-- [Chapter 1 — Introduction to AI Systems Engineering](introduction-to-ai-systems-engineering.md)
-  - [1.1 A Paradigm Shift in Software Engineering](introduction-to-ai-systems-engineering.md#11-a-paradigm-shift-in-software-engineering)
-  - [1.2 What is AI Systems Engineering](introduction-to-ai-systems-engineering.md#12-what-is-ai-systems-engineering)
-  - [1.3 The Convergence of Engineering Disciplines](introduction-to-ai-systems-engineering.md#13-the-convergence-of-engineering-disciplines)
-  - [1.4 From Software 1.0 to LLM Systems](introduction-to-ai-systems-engineering.md#14-from-software-10-to-llm-systems)
-  - [1.5 New Categories of System Artifacts](introduction-to-ai-systems-engineering.md#15-new-categories-of-system-artifacts)
-  - [1.6 The Artifact Dependency Graph](introduction-to-ai-systems-engineering.md#16-the-artifact-dependency-graph)
-  - [1.7 The Eight-Layer Architectural Model](introduction-to-ai-systems-engineering.md#17-the-eight-layer-architectural-model)
-  - [1.8 The AI System Lifecycle](introduction-to-ai-systems-engineering.md#18-the-ai-system-lifecycle)
-  - [1.9 New Engineering Challenges](introduction-to-ai-systems-engineering.md#19-new-engineering-challenges)
-  - [1.10 The AI Systems Engineering Knowledge Map](introduction-to-ai-systems-engineering.md#110-the-ai-systems-engineering-knowledge-map)
-  - [1.11 What You Will Learn](introduction-to-ai-systems-engineering.md#111-what-you-will-learn)
-- [Chapter 2 — Software 1.0 vs Software 2.0)](software-10-vs-software-20.md)
-  - [2.1 The Programming Paradigm That Shaped Enterprise Software](software-10-vs-software-20.md#21-the-programming-paradigm-that-shaped-enterprise-software)
-  - [2.2 The Limits of Explicit Rules](software-10-vs-software-20.md#22-the-limits-of-explicit-rules)
-  - [2.3 Software 2.0 — Learned Behavior](software-10-vs-software-20.md#23-software-20-learned-behavior)
-  - [2.4 The Comparative Anatomy of Both Paradigms](software-10-vs-software-20.md#24-the-comparative-anatomy-of-both-paradigms)
-  - [2.5 Large Language Models — A Step Further](software-10-vs-software-20.md#25-large-language-models-a-step-further)
-  - [2.6 Real LLM Systems: Beyond Simple Prompting](software-10-vs-software-20.md#26-real-llm-systems-beyond-simple-prompting)
-  - [2.7 Hybrid Systems: Combining Both Paradigms](software-10-vs-software-20.md#27-hybrid-systems-combining-both-paradigms)
-  - [2.8 Implications for Solution Architects](software-10-vs-software-20.md#28-implications-for-solution-architects)
-- [Chapter 3 — Machine Learning vs LLM](machine-learning-vs-llm.md)
-  - [3.1 Two Approaches to Intelligent Behavior](machine-learning-vs-llm.md#31-two-approaches-to-intelligent-behavior)
-  - [3.2 Classical Machine Learning: Task-Specific Models](machine-learning-vs-llm.md#32-classical-machine-learning-task-specific-models)
-  - [3.3 Large Language Models: Generalist Reasoning Engines](machine-learning-vs-llm.md#33-large-language-models-generalist-reasoning-engines)
-  - [3.4 Side-by-Side Comparison](machine-learning-vs-llm.md#34-side-by-side-comparison)
-  - [3.5 When to Use Each Approach](machine-learning-vs-llm.md#35-when-to-use-each-approach)
-  - [3.6 Practical Example: Document Routing System](machine-learning-vs-llm.md#36-practical-example-document-routing-system)
-  - [3.7 Fine-tuning: Bridging ML and LLM](machine-learning-vs-llm.md#37-fine-tuning-bridging-ml-and-llm)
-  - [3.8 Embedding Models: A Special Category](machine-learning-vs-llm.md#38-embedding-models-a-special-category)
-- [Chapter 4 — Tokens and Context](tokens-and-context.md)
-  - [4.1 The Token as the Fundamental Unit](tokens-and-context.md#41-the-token-as-the-fundamental-unit)
-  - [4.2 What is a Token](tokens-and-context.md#42-what-is-a-token)
-  - [4.3 Why Token Count Matters](tokens-and-context.md#43-why-token-count-matters)
-  - [4.4 The Context Window](tokens-and-context.md#44-the-context-window)
-  - [4.5 Measuring Token Usage in Code](tokens-and-context.md#45-measuring-token-usage-in-code)
-  - [4.6 Context Window Management in RAG Systems](tokens-and-context.md#46-context-window-management-in-rag-systems)
-  - [4.7 Generation Parameters and Their Effect](tokens-and-context.md#47-generation-parameters-and-their-effect)
-  - [4.8 Token Optimization Strategies](tokens-and-context.md#48-token-optimization-strategies)
-- [Chapter 5 — Prompt Engineering](prompt-engineering.md)
-  - [5.1 Prompts as System Configuration](prompt-engineering.md#51-prompts-as-system-configuration)
-  - [5.2 The Anatomy of a Production Prompt](prompt-engineering.md#52-the-anatomy-of-a-production-prompt)
-  - [5.3 System Prompts: The Behavioral Contract](prompt-engineering.md#53-system-prompts-the-behavioral-contract)
-  - [5.4 Prompting Strategies](prompt-engineering.md#54-prompting-strategies)
-  - [5.5 Prompt Templates and Dynamic Construction](prompt-engineering.md#55-prompt-templates-and-dynamic-construction)
-  - [5.6 Prompt Versioning](prompt-engineering.md#56-prompt-versioning)
-  - [5.7 Prompt Testing](prompt-engineering.md#57-prompt-testing)
-  - [5.8 Common Prompt Engineering Pitfalls](prompt-engineering.md#58-common-prompt-engineering-pitfalls)
-- [Chapter 6 — Limitations of LLMs](limitations-of-llms.md)
-  - [6.1 Engineering Around Fundamental Constraints](limitations-of-llms.md#61-engineering-around-fundamental-constraints)
-  - [6.2 Hallucination](limitations-of-llms.md#62-hallucination)
-  - [6.3 Knowledge Cutoff](limitations-of-llms.md#63-knowledge-cutoff)
-  - [6.4 Context Window Limitation](limitations-of-llms.md#64-context-window-limitation)
-  - [6.5 Non-Determinism](limitations-of-llms.md#65-non-determinism)
-  - [6.6 Prompt Sensitivity](limitations-of-llms.md#66-prompt-sensitivity)
-  - [6.7 Reasoning Limitations](limitations-of-llms.md#67-reasoning-limitations)
-  - [6.8 Security Vulnerabilities](limitations-of-llms.md#68-security-vulnerabilities)
-  - [6.9 Cost and Latency at Scale](limitations-of-llms.md#69-cost-and-latency-at-scale)
-  - [6.10 Limitation Summary and Mitigation Map](limitations-of-llms.md#610-limitation-summary-and-mitigation-map)
+Building these systems requires a different engineering mindset than traditional software development. Engineers must reason about probabilistic models, data-driven behavior, prompt design, retrieval architectures, and evaluation pipelines.
+
+The goal of the **Foundations** section is to introduce the core concepts that underpin modern **AI Systems Engineering**. These chapters establish the conceptual vocabulary and mental models needed to understand how AI systems are designed, built, and operated in production.
+
+Rather than focusing on model training or machine learning theory, this section focuses on **system-level thinking**. It explains how modern AI applications combine software engineering practices with machine learning components and large language models.
+
+By the end of this section, readers will understand:
+
+- how AI systems differ from traditional software systems
+- the architectural role of machine learning models and LLMs
+- the major types of AI system architectures
+- how tokens, prompts, and context influence system behavior
+- the limitations of large language models and their architectural implications
+
+These concepts form the foundation for the more advanced topics explored in later parts of the book, including **retrieval engineering, evaluation pipelines, platform infrastructure, and production operations**.
+
+---
+
+## Content
+
+The **Foundations** section introduces the fundamental concepts required to understand modern AI system architectures.
+
+- **[Chapter 1 — Introduction to AI Systems Engineering](introduction-to-ai-systems-engineering.md)**  
+  Introduces the discipline of AI Systems Engineering and explains how AI applications differ from traditional software systems.
+
+- **[Chapter 2 — Software 1.0 vs Software 2.0](software-10-vs-software-20.md)**  
+  Explains the shift from rule-based software to data-driven machine learning systems and how LLM-based systems extend this paradigm.
+
+- **[Chapter 3 — Machine Learning vs LLM](machine-learning-vs-llm.md)**  
+  Compares traditional machine learning models with large language models and explains when each approach is appropriate in system design.
+
+- **[Chapter 4 — AI System Types](ai-system-types.md)**  
+  Introduces common architectural patterns used in AI systems, including prompt-based systems, RAG architectures, workflow systems, and agent-based systems.
+
+- **[Chapter 5 — Tokens and Context](tokens-and-context.md)**  
+  Explains how language models process information using tokens and context windows, and how these constraints influence system design.
+
+- **[Chapter 6 — Prompt Engineering](prompt-engineering.md)**  
+  Introduces techniques for designing prompts that reliably control the behavior of language models in production systems.
+
+- **[Chapter 7 — Limitations of Large Language Models](limitations-of-llms.md)**  
+  Examines the inherent limitations of LLMs, including hallucinations, reasoning errors, and security vulnerabilities, and explains how system architectures mitigate these issues.
+
+---
+
+## How These Chapters Fit Together
+
+The chapters in this section build progressively toward a system-level understanding of AI applications.
+
+```
+
+AI Systems Engineering
+│
+├ Software Paradigms
+│   ├ Software 1.0
+│   └ Software 2.0
+│
+├ Model Types
+│   ├ Machine Learning Models
+│   └ Large Language Models
+│
+├ System Architectures
+│   ├ Prompt Systems
+│   ├ Retrieval-Augmented Systems
+│   ├ Workflow Systems
+│   └ Agent Systems
+│
+└ System Constraints
+├ Tokens and Context
+├ Prompt Design
+└ LLM Limitations
+
+```
+
+Together, these topics provide the conceptual foundation necessary to understand the architecture and engineering practices used in modern AI systems.

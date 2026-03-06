@@ -6,24 +6,33 @@
 
 Artificial intelligence systems can be built using different types of models. Traditional **machine learning models** are typically trained to solve a specific task using structured input features. In contrast, **large language models (LLMs)** are general-purpose foundation models capable of performing many tasks through prompting and contextual input.
 
-For AI systems engineers, understanding the differences between these approaches is essential. The choice between classical machine learning and LLM-based solutions affects system architecture, infrastructure requirements, operational cost, and evaluation methods.
+For AI systems engineers, understanding the differences between these approaches is essential. The choice between classical machine learning and LLM-based solutions affects system architecture, infrastructure requirements, operational cost, evaluation strategies, and system reliability.
 
 This chapter explains how classical machine learning systems differ from LLM-based systems and when each approach is most appropriate in production environments.
+
+Within the **AI Systems Reference Stack**, these approaches primarily affect:
+
+- **Model Layer** — type of model used for inference
+- **Prompt Layer** — how model behavior is controlled
+- **Retrieval Layer** — how external knowledge is incorporated
+- **Application Layer** — how models are integrated into business workflows
+
+Understanding these distinctions allows engineers to design **hybrid AI systems** that combine specialized models with general-purpose reasoning systems.
 
 ---
 
 ## Concept Overview
 
-Machine learning and LLM systems represent two different approaches to intelligent behavior.
+Machine learning systems and LLM systems represent two different approaches to intelligent behavior.
 
 ```
 
 AI Systems
 │
 ├ Classical Machine Learning
-│   ├ Task-specific models
-│   ├ Structured feature inputs
-│   └ Deterministic prediction pipelines
+│ ├ Task-specific models
+│ ├ Structured feature inputs
+│ └ Deterministic prediction pipelines
 │
 └ Large Language Models
 ├ Foundation models
@@ -37,6 +46,35 @@ Classical machine learning models are optimized for **specific prediction tasks*
 **Key Concept — Specialized vs General Models**
 
 Traditional machine learning systems are highly specialized and efficient for a single task. Large language models trade efficiency for flexibility by providing a single model capable of performing many tasks through prompt configuration.
+
+This distinction leads to fundamentally different engineering practices.
+
+| Aspect             | Classical ML              | LLM Systems              |
+| ------------------ | ------------------------- | ------------------------ |
+| Model purpose      | Single task               | General-purpose          |
+| Input format       | Structured features       | Natural language         |
+| Adaptation         | Retraining required       | Prompt engineering       |
+| Inference behavior | Deterministic predictions | Probabilistic generation |
+| System control     | Feature engineering       | Prompt + context         |
+
+A deeper comparison highlights additional engineering differences.
+
+| Property    | Classical ML           | LLM                     |
+| ----------- | ---------------------- | ----------------------- |
+| Training    | Task-specific training | Large-scale pretraining |
+| Interface   | Feature input / API    | Prompt interface        |
+| Adaptation  | Retraining required    | Prompt engineering      |
+| Scope       | Single task            | Many tasks              |
+| Output type | Prediction             | Generated output        |
+
+Another important difference lies in how systems represent input data.
+
+| Property            | Classical ML                  | LLM Systems             |
+| ------------------- | ----------------------------- | ----------------------- |
+| Feature design      | Manual feature engineering    | Learned representations |
+| Data representation | Structured numerical features | Token embeddings        |
+
+Modern AI systems often combine both approaches.
 
 ---
 
@@ -67,7 +105,7 @@ Examples include:
 - document analysis
 - code generation
 
-This distinction has significant implications for system architecture.
+This distinction has significant implications for system architecture, data pipelines, and infrastructure design.
 
 ---
 
@@ -89,6 +127,8 @@ Deployment
 
 ```
 
+Most classical ML systems rely on **supervised learning**, where models are trained using labeled datasets that map inputs to expected outputs.
+
 The model is trained using labeled datasets designed for a specific prediction task.
 
 Examples:
@@ -102,7 +142,7 @@ Examples:
 
 These systems rely heavily on **feature engineering**, where domain experts design the input features used by the model.
 
-Once deployed, the model performs deterministic inference:
+Once deployed, the model performs inference using a structured pipeline:
 
 ```
 
@@ -114,6 +154,14 @@ Prediction
 
 ```
 
+Predictions are typically:
+
+- fast
+- inexpensive
+- deterministic
+
+This makes classical ML particularly well suited for **high-throughput decision systems**.
+
 ---
 
 ## 3.3 Large Language Models: Generalist Reasoning Engines
@@ -122,26 +170,33 @@ Large language models follow a different paradigm.
 
 Instead of training separate models for each task, a **single pretrained model** is trained on massive datasets containing text and code.
 
+These models are commonly referred to as **foundation models** because they provide a base capability that can be adapted to many downstream tasks.
+
 The model learns:
 
 - language structure
 - semantic relationships
 - reasoning patterns
-- general knowledge
+- general world knowledge
+
+LLMs operate on **tokenized representations of text**, meaning that input text is converted into sequences of tokens before being processed by the model.
 
 Tasks are performed using prompts.
 
 ```
 
 Prompt
-+
-Context
-+
-Model
-↓
-Generated Output
+
+- Context
+- Model
+  ↓
+  Generated Output
 
 ```
+
+Unlike classical ML models that produce discrete predictions, LLMs **generate output tokens sequentially**, producing text, code, or structured responses.
+
+LLMs operate within a limited **context window**, which restricts how much information can be processed in a single inference request.
 
 For example, the same LLM can perform:
 
@@ -152,7 +207,15 @@ For example, the same LLM can perform:
 
 without retraining.
 
-This flexibility makes LLMs powerful but also introduces new challenges such as prompt sensitivity and higher inference cost.
+However, LLMs are **probabilistic systems**. Their outputs may vary depending on decoding parameters such as:
+
+- temperature
+- top-p sampling
+- token limits
+
+This flexibility makes LLMs powerful but also introduces new engineering challenges such as prompt sensitivity, hallucinations, and higher inference cost.
+
+LLM inference also tends to have **higher latency** than traditional ML models due to autoregressive token generation.
 
 ---
 
@@ -167,6 +230,7 @@ The differences between classical machine learning and LLM systems affect multip
 | Input format   | Structured features     | Natural language                    |
 | Output         | Predictions             | Generated text or structured output |
 | Inference cost | Low                     | Higher                              |
+| Latency        | Milliseconds            | Often seconds                       |
 | Flexibility    | Limited to trained task | Multi-purpose                       |
 
 Another useful comparison highlights the engineering perspective:
@@ -177,6 +241,19 @@ Another useful comparison highlights the engineering perspective:
 | Interface  | Feature input / API    | Prompt interface        |
 | Adaptation | Retraining required    | Prompt engineering      |
 | Scope      | Single task            | Many tasks              |
+
+This comparison highlights an important trade-off:
+
+**specialization vs flexibility**.
+
+In classical ML systems, evaluation focuses on **model-level metrics** such as:
+
+- accuracy
+- precision
+- recall
+- F1 score
+
+In contrast, LLM-based systems often require **system-level evaluation**, measuring end-to-end task performance across prompts, retrieval, and model outputs.
 
 ---
 
@@ -192,6 +269,7 @@ Classical ML is often better when:
 - large labeled datasets exist
 - latency requirements are strict
 - predictions must be highly consistent
+- inference must scale to millions of requests
 
 Examples include:
 
@@ -199,6 +277,7 @@ Examples include:
 - recommendation ranking
 - demand forecasting
 - anomaly detection
+- real-time bidding systems
 
 ### When LLMs Are Preferred
 
@@ -207,6 +286,7 @@ LLMs are more appropriate when:
 - tasks involve natural language
 - reasoning or explanation is required
 - workflows combine multiple tasks
+- inputs are unstructured documents
 - flexibility is more important than efficiency
 
 Examples include:
@@ -215,6 +295,7 @@ Examples include:
 - document analysis
 - knowledge assistants
 - coding assistants
+- research copilots
 
 ---
 
@@ -282,7 +363,9 @@ However, it also introduces additional operational complexity:
 - dataset management
 - model versioning
 
-Many systems instead rely on **retrieval-augmented generation (RAG)** to provide domain knowledge without retraining the model.
+Because of this complexity, many production systems instead rely on **retrieval-augmented generation (RAG)** to provide domain knowledge without retraining the model.
+
+Retrieval systems supply external knowledge to LLMs dynamically during inference.
 
 ---
 
@@ -313,6 +396,8 @@ Embedding models enable:
 
 They are a fundamental component of **RAG architectures**, where embeddings allow relevant documents to be retrieved and injected into the model's context.
 
+Embedding models often bridge traditional machine learning and LLM-based architectures.
+
 ---
 
 ## 📋 Chapter Summary
@@ -321,7 +406,9 @@ They are a fundamental component of **RAG architectures**, where embeddings allo
 - Large language models are **general-purpose foundation models** capable of performing many tasks through prompts.
 - ML models are typically more efficient and predictable for narrow tasks.
 - LLMs provide flexibility and reasoning capabilities but introduce higher inference cost and architectural complexity.
-- Many modern AI systems combine classical ML models, embedding models, and LLMs within a single architecture.
+- Fine-tuning allows pretrained models to be adapted to specific domains.
+- Embedding models enable semantic retrieval and are a core component of modern **RAG architectures**.
+- Many production AI systems combine classical ML models, embedding models, and LLM reasoning within a single architecture.
 
 ---
 
@@ -339,21 +426,28 @@ They are a fundamental component of **RAG architectures**, where embeddings allo
 
 ### Papers
 
-- [Language Models are Few-Shot Learners (GPT-3)](https://arxiv.org/abs/2005.14165) — Brown et al., 2020. Establishes LLMs as general-purpose task solvers.
-- [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/abs/1810.04805) — Devlin et al., 2018. Foundational pre-trained language model.
-- [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685) — Hu et al., 2021. Efficient fine-tuning technique.
-- [MTEB: Massive Text Embedding Benchmark](https://arxiv.org/abs/2210.07316) — Muennighoff et al., 2022. Standard benchmark for embedding model evaluation.
+- Language Models are Few-Shot Learners (GPT-3) — Brown et al., 2020
+  https://arxiv.org/abs/2005.14165
+
+- BERT: Pre-training of Deep Bidirectional Transformers — Devlin et al., 2018
+  https://arxiv.org/abs/1810.04805
+
+- LoRA: Low-Rank Adaptation of Large Language Models — Hu et al., 2021
+  https://arxiv.org/abs/2106.09685
+
+- MTEB: Massive Text Embedding Benchmark — Muennighoff et al., 2022
+  https://arxiv.org/abs/2210.07316
 
 ### Documentation
 
-- [Sentence Transformers Documentation](https://www.sbert.net) — Open-source embedding models.
-- [Hugging Face Model Hub](https://huggingface.co/models) — Repository of open-weight models and embedding models.
-- [OpenAI Embeddings Guide](https://platform.openai.com/docs/guides/embeddings) — Official embeddings API documentation.
-- [scikit-learn Documentation](https://scikit-learn.org/stable/) — Classical ML library reference.
+- Sentence Transformers Documentation — https://www.sbert.net
+- Hugging Face Model Hub — https://huggingface.co/models
+- OpenAI Embeddings Guide — https://platform.openai.com/docs/guides/embeddings
+- scikit-learn Documentation — https://scikit-learn.org/stable/
 
 ### Books
 
-- [Designing Machine Learning Systems](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/) — Chip Huyen, O'Reilly, 2022.
+- Designing Machine Learning Systems — Chip Huyen, O'Reilly, 2022
 
 ---
 
