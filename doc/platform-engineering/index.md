@@ -1,0 +1,33 @@
+# platform_engineering
+
+[🏠 Back to Home](../index.md)
+
+## Contents
+
+- [Chapter 1 — The Internal AI Platform](the-internal-ai-platform.md)
+  - [1.1 What Is an AI Platform?](the-internal-ai-platform.md#11-what-is-an-ai-platform)
+  - [1.2 Platform vs Product Teams](the-internal-ai-platform.md#12-platform-vs-product-teams)
+  - [1.3 Platform Capability Layers](the-internal-ai-platform.md#13-platform-capability-layers)
+  - [1.4 Platform API Design Principles](the-internal-ai-platform.md#14-platform-api-design-principles)
+- [Chapter 2 — LLM Gateway Design](llm-gateway-design.md)
+  - [2.1 Why a Gateway?](llm-gateway-design.md#21-why-a-gateway)
+  - [2.2 Gateway Core Capabilities](llm-gateway-design.md#22-gateway-core-capabilities)
+  - [2.3 Implementing a Production Gateway](llm-gateway-design.md#23-implementing-a-production-gateway)
+  - [2.4 Rate Limiting and Quota Management](llm-gateway-design.md#24-rate-limiting-and-quota-management)
+  - [2.5 Multi-Provider Routing and Fallback](llm-gateway-design.md#25-multi-provider-routing-and-fallback)
+- [Chapter 3 — Prompt Management Platform](prompt-management-platform.md)
+  - [3.1 Centralised Prompt Service](prompt-management-platform.md#31-centralised-prompt-service)
+  - [3.2 Prompt Serving with Caching](prompt-management-platform.md#32-prompt-serving-with-caching)
+  - [3.3 Prompt Governance Workflows](prompt-management-platform.md#33-prompt-governance-workflows)
+- [Chapter 4 — Embedding and Index Platform 🧪](embedding-and-index-platform.md)
+  - [4.1 Shared Embedding Service](embedding-and-index-platform.md#41-shared-embedding-service)
+  - [4.2 Index Lifecycle Service](embedding-and-index-platform.md#42-index-lifecycle-service)
+  - [4.3 Multi-Tenant Index Isolation](embedding-and-index-platform.md#43-multi-tenant-index-isolation)
+  - [4.4 Java Integration Patterns](embedding-and-index-platform.md#44-java-integration-patterns)
+  - [🧪 Hands-on Lab: Minimal AI Platform](embedding-and-index-platform.md#hands-on-lab-minimal-ai-platform)
+- [Chapter 5 — Platform Observability and Cost Management](platform-observability-and-cost-management.md)
+  - [5.1 Platform Metrics Taxonomy](platform-observability-and-cost-management.md#51-platform-metrics-taxonomy)
+  - [5.2 Cost Attribution and Budgets](platform-observability-and-cost-management.md#52-cost-attribution-and-budgets)
+  - [5.3 Token Usage Tracking](platform-observability-and-cost-management.md#53-token-usage-tracking)
+  - [5.4 Platform SLOs](platform-observability-and-cost-management.md#54-platform-slos)
+- [Supplementary Chapter — AI Engineering Toolchain](ai-engineering-toolchain.md)

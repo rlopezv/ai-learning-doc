@@ -2,6 +2,12 @@
 
 [🏠 Back to Home](../index.md)
 
+# Foundations
+
+Artificial Intelligence systems differ fundamentally from traditional software systems. Classical software relies on deterministic rules written in code, while modern AI systems combine models, prompts, data, and orchestration layers to produce behavior that emerges from statistical learning.
+
+This section introduces the conceptual foundations required to understand how modern AI systems are designed, built, and operated in production environments.
+
 ## Contents
 
 - [Chapter 1 — Introduction to AI Systems Engineering](introduction-to-ai-systems-engineering.md)

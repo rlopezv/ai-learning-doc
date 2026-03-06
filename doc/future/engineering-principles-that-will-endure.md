@@ -218,7 +218,7 @@ print("=" * 55)
 ---
 
 > **Navigation**
-> [← Part XVIII — Practical Case Studies](../case_studies/index.md)
+> [← Part XVIII — Practical Case Studies](../case-studies/index.md)
 
 ---
 

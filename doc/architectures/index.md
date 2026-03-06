@@ -43,3 +43,4 @@
   - [6.3 LangGraph: Graph-Based Workflow Orchestration](workflow-systems.md#63-langgraph-graph-based-workflow-orchestration)
   - [6.4 Workflow Systems for Java Architects](workflow-systems.md#64-workflow-systems-for-java-architects)
   - [6.5 Production Workflow Patterns](workflow-systems.md#65-production-workflow-patterns)
+- [Supplementary Chapter — AI Systems Reference Stack](ai-systems-reference-stack.md)

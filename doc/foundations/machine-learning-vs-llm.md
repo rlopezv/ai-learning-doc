@@ -1,306 +1,376 @@
-## Chapter 3 — Machine Learning vs LLM
+# Chapter 3 — Machine Learning vs LLM
 
-### 3.1 Two Approaches to Intelligent Behavior
+[⬅ Back to Foundations](index.md)
 
-The distinction between classical machine learning and large language models is not merely technical — it reflects a fundamentally different approach to building intelligent system components. Understanding this distinction is essential for making sound architecture decisions: when is a traditional ML model the right choice, and when do LLMs offer clear advantages?
+## Context
 
----
+Artificial intelligence systems can be built using different types of models. Traditional **machine learning models** are typically trained to solve a specific task using structured input features. In contrast, **large language models (LLMs)** are general-purpose foundation models capable of performing many tasks through prompting and contextual input.
 
-### 3.2 Classical Machine Learning: Task-Specific Models
+For AI systems engineers, understanding the differences between these approaches is essential. The choice between classical machine learning and LLM-based solutions affects system architecture, infrastructure requirements, operational cost, and evaluation methods.
 
-Classical supervised ML follows a well-defined workflow: collect labeled data, engineer features, train a model on a specific task, evaluate, and deploy. The result is a model that performs one task well — but only that task.
-
-```
-labeled_dataset
-      │
-      ▼
-feature engineering
-      │
-      ▼
-model training (task-specific)
-      │
-      ▼
-evaluation
-      │
-      ▼
-deployed model (single task)
-```
-
-**Strengths:**
-- High precision on well-defined tasks with sufficient training data
-- Computationally efficient at inference time
-- Deterministic (for non-probabilistic models)
-- Easier to explain and audit (for linear models, decision trees)
-- No prompt engineering required
-
-**Weaknesses:**
-- Requires substantial labeled data per task
-- Does not generalize across tasks
-- Retraining required when task definition changes
-- Limited handling of natural language nuance
+This chapter explains how classical machine learning systems differ from LLM-based systems and when each approach is most appropriate in production environments.
 
 ---
 
-### 3.3 Large Language Models: Generalist Reasoning Engines
+## Concept Overview
 
-LLMs are pre-trained on enormous text corpora to learn general language understanding and reasoning. They are not designed for a specific task — they are designed to follow instructions expressed in natural language.
+Machine learning and LLM systems represent two different approaches to intelligent behavior.
 
 ```
-general_text_corpus (pre-training)
-      │
-      ▼
-LLM (general purpose)
-      │
-      ▼
-prompt instruction (task specification at runtime)
-      │
-      ▼
-response (task-specific output)
+
+AI Systems
+│
+├ Classical Machine Learning
+│   ├ Task-specific models
+│   ├ Structured feature inputs
+│   └ Deterministic prediction pipelines
+│
+└ Large Language Models
+├ Foundation models
+├ Prompt-driven behavior
+└ Context-based reasoning
+
 ```
 
-The same model can classify text, summarize documents, extract structured data, translate languages, generate code, and answer questions — the task is specified in the prompt, not in the model architecture.
+Classical machine learning models are optimized for **specific prediction tasks**, while LLMs are designed to **generalize across many tasks using prompts and contextual information**.
 
-**Strengths:**
-- Zero-shot and few-shot generalization to new tasks
-- Handles linguistic variation and ambiguity robustly
-- No task-specific training required for most use cases
-- Continuously improving base models
-- Capable of complex multi-step reasoning
+**Key Concept — Specialized vs General Models**
 
-**Weaknesses:**
-- Non-deterministic outputs
-- Prone to hallucination
-- Token-based inference cost
-- Context window limits the amount of information per call
-- Requires prompt engineering discipline
-- Knowledge cutoff — no awareness of events after training
+Traditional machine learning systems are highly specialized and efficient for a single task. Large language models trade efficiency for flexibility by providing a single model capable of performing many tasks through prompt configuration.
 
 ---
 
-### 3.4 Side-by-Side Comparison
+## 3.1 Two Approaches to Intelligent Behavior
 
-| Dimension | Classical ML | LLM |
-|---|---|---|
-| **Task scope** | Single task | Multiple tasks via prompting |
-| **Training requirement** | Labeled dataset per task | Pre-trained; minimal or no fine-tuning |
-| **Inference cost** | Very low | Higher (token-based) |
-| **Determinism** | High (for most models) | Low (probabilistic sampling) |
-| **Explainability** | Moderate to high | Low (opaque weights) |
-| **Natural language handling** | Limited | Excellent |
-| **Structured output** | Native | Requires prompt engineering |
-| **Hallucination risk** | None | Present |
-| **Knowledge cutoff** | N/A | Yes — training data cutoff |
+AI systems can broadly be divided into two categories:
 
----
+1. **Task-specific models** trained for a single purpose.
+2. **General-purpose models** capable of performing many tasks.
 
-### 3.5 When to Use Each Approach
+Classical machine learning falls into the first category.
 
-The choice between classical ML and LLMs is an architectural decision with performance, cost, and maintainability implications.
+Examples include:
 
-**Use classical ML when:**
-- The task is well-defined and training data is available
-- Inference cost at scale is a primary concern
-- Determinism and explainability are required (regulated environments)
-- Real-time latency requirements are strict (< 10ms)
-- The feature space is structured (tabular data, time series)
+- fraud detection
+- credit risk prediction
+- recommendation systems
+- anomaly detection
+- image classification
 
-**Use LLMs when:**
-- The task involves natural language understanding or generation
-- Training data is unavailable or insufficient for a task-specific model
-- The task definition may evolve (prompts are easier to update than retraining)
-- Multi-step reasoning or synthesis is required
-- You need a single model to handle multiple tasks
+Large language models belong to the second category. They are pretrained on large corpora and can perform multiple tasks through prompting.
 
-**Use both (hybrid approach) when:**
-- An LLM handles language understanding, a classifier handles structured routing
-- An LLM generates candidate outputs, a traditional model scores or ranks them
-- Real-time filtering (ML) feeds context to an LLM for deeper analysis
+Examples include:
+
+- summarization
+- translation
+- conversational assistants
+- document analysis
+- code generation
+
+This distinction has significant implications for system architecture.
 
 ---
 
-### 3.6 Practical Example: Document Routing System
+## 3.2 Classical Machine Learning: Task-Specific Models
 
-Consider a system that receives customer documents and must route them to the correct processing pipeline. Two approaches:
+Traditional machine learning systems follow a structured development pipeline.
 
-**Approach A — Classical ML classifier:**
-
-**Python**
-```python
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import RandomForestClassifier
-import joblib
-
-# Training phase
-clf = Pipeline([
-    ("tfidf", TfidfVectorizer(max_features=10000)),
-    ("classifier", RandomForestClassifier(n_estimators=100))
-])
-clf.fit(train_texts, train_labels)
-joblib.dump(clf, "document_router.pkl")
-
-# Inference — very fast, no API call
-def route_document_ml(document_text: str) -> str:
-    model = joblib.load("document_router.pkl")
-    return model.predict([document_text])[0]
 ```
 
-**Approach B — LLM classifier:**
+Data Collection
+↓
+Feature Engineering
+↓
+Model Training
+↓
+Evaluation
+↓
+Deployment
 
-**Python**
-```python
-from openai import OpenAI
-
-ROUTING_PROMPT = """
-Classify the following document into one of these categories:
-- invoice
-- contract
-- support_request
-- technical_specification
-- other
-
-Respond with only the category name.
-
-Document:
-{document_text}
-"""
-
-def route_document_llm(document_text: str) -> str:
-    client = OpenAI()
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",  # Cost-optimized for classification
-        messages=[{"role": "user", "content": ROUTING_PROMPT.format(
-            document_text=document_text[:2000]  # Truncate for cost control
-        )}],
-        temperature=0
-    )
-    return response.choices[0].message.content.strip()
 ```
 
-**Java — Approach B with [LangChain4j](https://docs.langchain4j.dev) and local model:**
-```java
-import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.UserMessage;
+The model is trained using labeled datasets designed for a specific prediction task.
 
-interface DocumentRouter {
-    @dev.langchain4j.service.SystemMessage("""
-        Classify the document into one of: invoice, contract,
-        support_request, technical_specification, other.
-        Respond with only the category name.
-        """)
-    String route(@UserMessage String documentText);
-}
+Examples:
 
-// On-premise deployment with Ollama
-OllamaChatModel model = OllamaChatModel.builder()
-    .baseUrl("http://ollama-server:11434")
-    .modelName("mistral")
-    .temperature(0.0)
-    .build();
+| Use Case               | Typical Model                           |
+| ---------------------- | --------------------------------------- |
+| Spam detection         | Logistic regression / gradient boosting |
+| Fraud detection        | Gradient boosting                       |
+| Recommendation systems | Collaborative filtering                 |
+| Image recognition      | Convolutional neural networks           |
 
-DocumentRouter router = AiServices.create(DocumentRouter.class, model);
-String category = router.route(documentText);
+These systems rely heavily on **feature engineering**, where domain experts design the input features used by the model.
+
+Once deployed, the model performs deterministic inference:
+
 ```
 
-The ML approach is faster and cheaper at scale for well-defined categories. The LLM approach handles ambiguous documents better and requires no labeled training data — but costs more per inference and introduces non-determinism.
+Input Features
+↓
+Model
+↓
+Prediction
+
+```
 
 ---
 
-### 3.7 Fine-tuning: Bridging ML and LLM
+## 3.3 Large Language Models: Generalist Reasoning Engines
 
-Fine-tuning takes a pre-trained LLM and adapts it to a specific domain or task using a targeted dataset. It combines the general capabilities of LLMs with the precision of task-specific training.
+Large language models follow a different paradigm.
+
+Instead of training separate models for each task, a **single pretrained model** is trained on massive datasets containing text and code.
+
+The model learns:
+
+- language structure
+- semantic relationships
+- reasoning patterns
+- general knowledge
+
+Tasks are performed using prompts.
 
 ```
-pre-trained LLM (general)
-      │
-      ▼
-fine-tuning dataset (domain-specific)
-      │
-      ▼
-fine-tuned LLM (domain-adapted)
+
+Prompt
++
+Context
++
+Model
+↓
+Generated Output
+
 ```
 
-**When fine-tuning makes sense:**
-- A specific output format must be enforced consistently
-- Domain vocabulary is specialized enough to confuse the base model
-- Prompt engineering alone cannot achieve required quality
-- Inference cost at scale justifies the upfront training investment
+For example, the same LLM can perform:
 
-**When to avoid fine-tuning:**
-- The problem can be solved with prompt engineering (cheaper and faster to iterate)
-- The task or knowledge base changes frequently (fine-tuning is expensive to repeat)
-- The required data volume for fine-tuning is unavailable
+- translation
+- summarization
+- classification
+- code generation
 
-> **Architecture recommendation:** Always attempt to solve the problem with prompt engineering and RAG first. Fine-tuning is a last resort when other approaches have been exhausted and quality requirements are not met.
+without retraining.
+
+This flexibility makes LLMs powerful but also introduces new challenges such as prompt sensitivity and higher inference cost.
 
 ---
 
-### 3.8 Embedding Models: A Special Category
+## 3.4 Side-by-Side Comparison
 
-Embedding models occupy a unique position — they are ML models in the traditional sense (deterministic, fast, cheap) but are purpose-built to support LLM systems by converting text into dense vector representations.
+The differences between classical machine learning and LLM systems affect multiple dimensions of system design.
 
-```
-text → embedding_model → vector (e.g., 1536 dimensions)
+| Dimension      | Classical ML            | LLM Systems                         |
+| -------------- | ----------------------- | ----------------------------------- |
+| Training       | Task-specific datasets  | Large-scale pretraining             |
+| Adaptation     | Retraining required     | Prompt-based configuration          |
+| Input format   | Structured features     | Natural language                    |
+| Output         | Predictions             | Generated text or structured output |
+| Inference cost | Low                     | Higher                              |
+| Flexibility    | Limited to trained task | Multi-purpose                       |
 
-"authentication issue"    → [0.23, -0.17,  0.91, ...]
-"cannot log in"           → [0.21, -0.14,  0.88, ...]  ← similar
-"payment processing error"→ [-0.12, 0.44, -0.31, ...]  ← dissimilar
-```
+Another useful comparison highlights the engineering perspective:
 
-Vectors that are close in the embedding space represent semantically similar texts. This property is the foundation of vector similarity search in RAG systems.
-
-**Key embedding models:**
-
-| Model | Provider | Dimensions | On-premise |
-|---|---|---|---|
-| `text-embedding-3-large` | OpenAI | 3072 | No |
-| `text-embedding-3-small` | OpenAI | 1536 | No |
-| `embed-english-v3.0` | [Cohere](https://docs.cohere.com) | 1024 | No |
-| `all-MiniLM-L6-v2` | HuggingFace | 384 | ✅ Yes |
-| `[nomic-embed](https://huggingface.co/nomic-ai/nomic-embed-text-v1)-text` | Nomic / Ollama | 768 | ✅ Yes |
-| `bge-large-en-v1.5` | BAAI / HuggingFace | 1024 | ✅ Yes |
-
-> **On-premise note:** For environments where data cannot leave the organization, `[sentence-transformers](https://www.sbert.net)` (Python) and `djl` (Java) provide production-grade embedding generation using open-weight models.
+| Property   | ML Model               | LLM                     |
+| ---------- | ---------------------- | ----------------------- |
+| Training   | Task-specific training | Large-scale pretraining |
+| Interface  | Feature input / API    | Prompt interface        |
+| Adaptation | Retraining required    | Prompt engineering      |
+| Scope      | Single task            | Many tasks              |
 
 ---
 
-> ### 📋 Chapter Summary
->
-> - **Classical ML** produces task-specific models from labeled data: fast, deterministic, and cost-effective at scale for well-defined tasks.
-> - **LLMs** are general-purpose reasoning engines that perform tasks via natural language instructions — flexible, but probabilistic and token-cost-constrained.
-> - The architectural choice depends on task definition stability, data availability, latency requirements, and cost tolerance.
-> - **Fine-tuning** bridges the two approaches: it adapts a pre-trained LLM to a specific domain but requires data, cost, and careful trade-off analysis.
-> - **Embedding models** are deterministic ML models that generate semantic vector representations — the backbone of retrieval systems.
+## 3.5 When to Use Each Approach
+
+Selecting the appropriate model type depends on system requirements.
+
+### When Classical Machine Learning is Preferred
+
+Classical ML is often better when:
+
+- the problem is well-defined
+- large labeled datasets exist
+- latency requirements are strict
+- predictions must be highly consistent
+
+Examples include:
+
+- fraud detection
+- recommendation ranking
+- demand forecasting
+- anomaly detection
+
+### When LLMs Are Preferred
+
+LLMs are more appropriate when:
+
+- tasks involve natural language
+- reasoning or explanation is required
+- workflows combine multiple tasks
+- flexibility is more important than efficiency
+
+Examples include:
+
+- conversational assistants
+- document analysis
+- knowledge assistants
+- coding assistants
 
 ---
 
-> ### ❓ Comprehension Questions
->
-> 1. A fraud detection system must classify 50,000 transactions per second with < 5ms latency. Which approach — classical ML or LLM — is appropriate? Justify your answer.
-> 2. Your team is building a system to extract structured fields from unstructured medical reports. Training data is scarce. Compare the trade-offs of fine-tuning a small model versus using a general LLM with a structured extraction prompt.
-> 3. Why is it important that the embedding model used during document ingestion is the same as the one used during query processing?
-> 4. Describe a hybrid architecture where a classical ML model and an LLM collaborate on the same task. What does each component contribute?
-> 5. A stakeholder asks why the system sometimes produces different outputs for identical inputs. How would you explain LLM non-determinism to a team accustomed to deterministic systems?
+## 3.6 Practical Example: Document Routing
+
+Consider a system that routes documents to the correct department.
+
+A classical machine learning approach might use:
+
+```
+
+Document
+↓
+Feature Extraction
+↓
+Text Classification Model
+↓
+Department Prediction
+
+```
+
+An LLM-based approach might look like:
+
+```
+
+Document
+↓
+Prompt + Context
+↓
+LLM
+↓
+Structured Output
+
+```
+
+The ML solution is usually:
+
+- faster
+- cheaper
+- more predictable
+
+The LLM solution is:
+
+- more flexible
+- easier to adapt
+- capable of reasoning over complex documents
+
+---
+
+## 3.7 Fine-Tuning: Bridging ML and LLM
+
+Fine-tuning allows engineers to adapt a pretrained model to a specific domain.
+
+Instead of training from scratch, the model is updated using a smaller domain-specific dataset.
+
+Fine-tuning can improve:
+
+- accuracy
+- domain knowledge
+- response consistency
+
+However, it also introduces additional operational complexity:
+
+- training infrastructure
+- dataset management
+- model versioning
+
+Many systems instead rely on **retrieval-augmented generation (RAG)** to provide domain knowledge without retraining the model.
+
+---
+
+## 3.8 Embedding Models: A Special Category
+
+Embedding models convert text into numerical vectors that capture semantic meaning.
+
+Typical pipeline:
+
+```
+
+Text
+↓
+Embedding Model
+↓
+Vector Representation
+↓
+Vector Database Search
+
+```
+
+Embedding models enable:
+
+- semantic search
+- document retrieval
+- clustering
+- similarity matching
+
+They are a fundamental component of **RAG architectures**, where embeddings allow relevant documents to be retrieved and injected into the model's context.
+
+---
+
+## 📋 Chapter Summary
+
+- Classical machine learning models are designed for **specific prediction tasks** using structured input features.
+- Large language models are **general-purpose foundation models** capable of performing many tasks through prompts.
+- ML models are typically more efficient and predictable for narrow tasks.
+- LLMs provide flexibility and reasoning capabilities but introduce higher inference cost and architectural complexity.
+- Many modern AI systems combine classical ML models, embedding models, and LLMs within a single architecture.
+
+---
+
+## ❓ Comprehension Questions
+
+1. What are the main differences between classical machine learning models and large language models in terms of training and system integration?
+2. Why are classical machine learning models typically more efficient for narrow prediction tasks?
+3. How do prompts enable LLMs to perform tasks without retraining?
+4. In which situations would a classical ML solution be preferable to an LLM-based system?
+5. What role do embedding models play in modern AI architectures?
 
 ---
 
 ## References
 
 ### Papers
+
 - [Language Models are Few-Shot Learners (GPT-3)](https://arxiv.org/abs/2005.14165) — Brown et al., 2020. Establishes LLMs as general-purpose task solvers.
 - [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/abs/1810.04805) — Devlin et al., 2018. Foundational pre-trained language model.
 - [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685) — Hu et al., 2021. Efficient fine-tuning technique.
 - [MTEB: Massive Text Embedding Benchmark](https://arxiv.org/abs/2210.07316) — Muennighoff et al., 2022. Standard benchmark for embedding model evaluation.
 
 ### Documentation
+
 - [Sentence Transformers Documentation](https://www.sbert.net) — Open-source embedding models.
 - [Hugging Face Model Hub](https://huggingface.co/models) — Repository of open-weight models and embedding models.
 - [OpenAI Embeddings Guide](https://platform.openai.com/docs/guides/embeddings) — Official embeddings API documentation.
 - [scikit-learn Documentation](https://scikit-learn.org/stable/) — Classical ML library reference.
 
 ### Books
+
 - [Designing Machine Learning Systems](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/) — Chip Huyen, O'Reilly, 2022.
 
 ---
-[« Back to foundations Index](index.md) | [🏠 Home](../index.md)
+
+## See Also
+
+Related chapters:
+
+- Chapter 2 — Software 1.0 vs Software 2.0
+- Chapter 4 — AI System Types
+- Chapter 5 — Tokens and Context
+
+---
+
+## Key Takeaways
+
+- Classical machine learning and LLM systems represent different paradigms for building intelligent software.
+- ML models are specialized and efficient for narrow prediction tasks.
+- LLMs are general-purpose reasoning systems configured through prompts.
+- Embedding models bridge traditional ML techniques and modern LLM architectures.
+- Many production AI systems combine **ML models, retrieval systems, and LLM reasoning** in hybrid architectures.

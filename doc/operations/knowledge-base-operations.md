@@ -488,7 +488,7 @@ python ops_runbook_simulator.py
 ---
 
 > **Navigation**
-> [← Part XV — Governance](../governance/index.md) | [→ Part XVII — Reference Architectures](../reference_architectures/index.md)
+> [← Part XV — Governance](../governance/index.md) | [→ Part XVII — Reference Architectures](../reference-architectures/index.md)
 
 ---
 [« Back to operations Index](index.md) | [🏠 Home](../index.md)

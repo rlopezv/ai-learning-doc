@@ -1,0 +1,140 @@
+site_name: AI Systems Engineering
+theme:
+  name: material
+docs_dir: .
+nav:
+- Home: index.md
+- Foundations:
+  - Overview: foundations/index.md
+  - Introduction To Ai Systems Engineering: foundations/introduction-to-ai-systems-engineering.md
+  - Instead of asking the LLM to calculate: foundations/limitations-of-llms.md
+  - Training phase: foundations/machine-learning-vs-llm.md
+  - Prompt Engineering: foundations/prompt-engineering.md
+  - Training: foundations/software-10-vs-software-20.md
+  - Usage: foundations/tokens-and-context.md
+  - AI System Types: foundations/ai-system-types.md
+- Architectures:
+  - Overview: architectures/index.md
+  - Embedding model (local — no API cost): architectures/agent-architectures.md
+  - Architectural Patterns: architectures/architectural-patterns.md
+  - Usage: architectures/prompt-only-systems.md
+  - No API calls — runs entirely locally: architectures/retrieval-augmented-generation.md
+  - Tool definitions as JSON schemas: architectures/tool-augmented-llm.md
+  - Define shared state: architectures/workflow-systems.md
+  - AI Systems Reference Stack: architectures/ai-systems-reference-stack.md
+- Rag Engineering:
+  - Overview: rag-engineering/index.md
+  - Token-accurate splitting (preferred over character-based in production): rag-engineering/chunking.md
+  - Context Construction: rag-engineering/context-construction.md
+  - Truncate to 256 dimensions — 6x storage reduction: rag-engineering/embeddings.md
+  - Usage in RAG pipeline: rag-engineering/reranking.md
+  - Retrieval Strategies: rag-engineering/retrieval-strategies.md
+  - Create collection: rag-engineering/vector-databases.md
+- Advanced Rag:
+  - Overview: advanced-rag/index.md
+  - 🔓 LLMLingua — fully local, no API calls: advanced-rag/context-compression.md
+  - Index documents: advanced-rag/hybrid-search.md
+  - Build graph using networkx: advanced-rag/knowledge-graphs-rag.md
+  - Multi Stage Retrieval: advanced-rag/multi-stage-retrieval.md
+  - Example: advanced-rag/query-rewriting.md
+  - Build evaluation dataset in RAGAS format: advanced-rag/retrieval-evaluation.md
+- Dataset Engineering:
+  - Overview: dataset-engineering/index.md
+  - Data Augmentation: dataset-engineering/data-augmentation.md
+  - Check functions: dataset-engineering/data-quality.md
+  - Dataset Lifecycle: dataset-engineering/dataset-lifecycle.md
+  - Initialise DVC in an existing Git repository: dataset-engineering/dataset-versioning.md
+  - '── Step 1: Generate ──────────────────────────────────────': dataset-engineering/synthetic-dataset-generation.md
+- Artifact Engineering:
+  - Overview: artifact-engineering/index.md
+  - Artifact Pipelines: artifact-engineering/artifact-pipelines.md
+  - Bias Considerations: artifact-engineering/bias-considerations.md
+  - Index Artifacts: artifact-engineering/index-artifacts.md
+  - Modelfile — wraps a base model with a custom system prompt: artifact-engineering/model-artifacts.md
+  - Production RAG prompt template: artifact-engineering/prompt-artifacts.md
+  - What Is An Artifact In An Llm System: artifact-engineering/what-is-an-artifact-in-an-llm-system.md
+- Layouts Repositories:
+  - Overview: layouts-repositories/index.md
+  - config/config.base.yaml: layouts-repositories/configuration-management.md
+  - pyproject.toml — root Python tooling config: layouts-repositories/dependency-management.md
+  - 'ADR-007: Vector Database Selection': layouts-repositories/documentation-as-code.md
+  - scripts/check_imports.py: layouts-repositories/repository-structure-for-ai-systems.md
+- Sdlc:
+  - Overview: sdlc/index.md
+  - GitLab CI equivalent of the GitHub Actions CI pipeline: sdlc/cicd-for-llm-systems.md
+  - 'Example: Prompt-first development for a document summarisation feature': sdlc/feature-development-workflow.md
+  - version.py — single source of truth for system version: sdlc/release-management.md
+  - The Ai Systems Development Lifecycle: sdlc/the-ai-systems-development-lifecycle.md
+  - End-to-End AI System Lifecycle: sdlc/end-to-end-ai-system-lifecycle.md
+- Evaluation Engineering:
+  - Overview: evaluation-engineering/index.md
+  - ── Sample knowledge base ──────────────────────────────────: evaluation-engineering/evaluation-pipelines.md
+  - Evaluation Strategy: evaluation-engineering/evaluation-strategy.md
+  - Generation Evaluation: evaluation-engineering/generation-evaluation.md
+  - RAG Answer Quality Annotation Guidelines: evaluation-engineering/human-evaluation.md
+  - Retrieval Evaluation: evaluation-engineering/retrieval-evaluation.md
+- Testing:
+  - Overview: testing/index.md
+  - ── Minimal RAG pipeline for lab ──────────────────────────────────────: testing/adversarial-and-safety-testing.md
+  - tests/integration/test_ingestion_pipeline.py: testing/integration-and-contract-testing.md
+  - Define run conditions per suite: testing/testing-strategy-for-llm-systems.md
+  - '── Pattern 1: Response factory ──────────────────────────────────────────': testing/unit-testing-llm-components.md
+- Platform Engineering:
+  - Overview: platform-engineering/index.md
+  - ── 1. Minimal gateway (in-process) ────────────────────────────────: platform-engineering/embedding-and-index-platform.md
+  - Example routing configuration: platform-engineering/llm-gateway-design.md
+  - Platform metrics — collected automatically on every API call: platform-engineering/platform-observability-and-cost-management.md
+  - ── API schemas ──────────────────────────────────────────────────────────────: platform-engineering/prompt-management-platform.md
+  - Platform API design principles encoded in the base request class: platform-engineering/the-internal-ai-platform.md
+  - AI Engineering Toolchain: platform-engineering/ai-engineering-toolchain.md
+- Infrastructure:
+  - Overview: infrastructure/index.md
+  - apps/api/Dockerfile — Production RAG API (Python/FastAPI): infrastructure/containerisation-and-orchestration.md
+  - infrastructure/terraform/main.tf: infrastructure/infrastructure-as-code.md
+  - Install and pull models: infrastructure/on-premise-llm-platform-design.md
+  - apps/ingestion/src/celery_app.py: infrastructure/scalable-ingestion-infrastructure.md
+  - 'Example: 500K vectors, 1536-dim, scalar quantisation (4x memory reduction)': infrastructure/vector-database-infrastructure.md
+- Observability:
+  - Overview: observability/index.md
+  - infrastructure/prometheus/alerts/rag_alerts.yml: observability/alerting-and-incident-response.md
+  - ── Initialise OTel tracer ────────────────────────────────────────────: observability/distributed-tracing.md
+  - ── Request metrics ────────────────────────────────────────────────────: observability/metrics-and-dashboards.md
+  - Observability Strategy For Llm Systems: observability/observability-strategy-for-llm-systems.md
+  - Example log query patterns (Elasticsearch / Loki / CloudWatch): observability/structured-logging.md
+- Security:
+  - Overview: security/index.md
+  - ── Minimal injection detector ─────────────────────────────────────: security/authentication-authorisation-and-audit.md
+  - Data Security And Privacy: security/data-security-and-privacy.md
+  - Llm Security Threat Model: security/llm-security-threat-model.md
+  - Prompt Injection Defence: security/prompt-injection-defence.md
+- Governance:
+  - Overview: governance/index.md
+  - Ai Governance Frameworks: governance/ai-governance-frameworks.md
+  - .github/workflows/compliance.yml: governance/compliance-automation.md
+  - Model And Data Lifecycle Governance: governance/model-and-data-lifecycle-governance.md
+  - Responsible Ai Engineering: governance/responsible-ai-engineering.md
+- Operations:
+  - Overview: operations/index.md
+  - Cost Management In Production: operations/cost-management-in-production.md
+  - Recommended strategy by (change_type, quality_impact): operations/deployment-patterns-and-release-engineering.md
+  - ── 1. Token budget enforcer ─────────────────────────────────────: operations/knowledge-base-operations.md
+  - LLM-specific chaos experiments: operations/reliability-engineering.md
+- Reference Architectures:
+  - Overview: reference-architectures/index.md
+  - docker-compose.airgap.yml — Complete air-gapped RAG stack: reference-architectures/air-gapped-and-on-premise-architecture.md
+  - Sizing model for minimal architecture: reference-architectures/minimal-rag-architecture.md
+  - Multi Tenant Enterprise Architecture: reference-architectures/multi-tenant-enterprise-architecture.md
+  - Production Rag Architecture: reference-architectures/production-rag-architecture.md
+- Case Studies:
+  - Overview: case-studies/index.md
+  - Code Intelligence Platform: case-studies/code-intelligence-platform.md
+  - Customer Support Rag System: case-studies/customer-support-rag-system.md
+  - Financial Document Analysis: case-studies/financial-document-analysis.md
+  - '── Case 1: Support escalation classifier ─────────────────────': case-studies/healthcare-knowledge-assistant.md
+  - Slack bot integration: case-studies/internal-knowledge-base-for-engineering-teams.md
+- Future:
+  - Overview: future/index.md
+  - Agentic Systems And Autonomous Ai: future/agentic-systems-and-autonomous-ai.md
+  - Engineering Principles That Will Endure: future/engineering-principles-that-will-endure.md
+  - Infrastructure And Platform Evolution: future/infrastructure-and-platform-evolution.md
+  - The Evolving Llm Landscape: future/the-evolving-llm-landscape.md

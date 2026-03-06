@@ -1,0 +1,31 @@
+# layouts_repositories
+
+[🏠 Back to Home](../index.md)
+
+## Contents
+
+- [Chapter 1 — Repository Structure for AI Systems](repository-structure-for-ai-systems.md)
+  - [1.1 Why Repository Layout Matters](repository-structure-for-ai-systems.md#11-why-repository-layout-matters)
+  - [1.2 Monorepo vs Polyrepo](repository-structure-for-ai-systems.md#12-monorepo-vs-polyrepo)
+  - [1.3 Canonical Monorepo Layout](repository-structure-for-ai-systems.md#13-canonical-monorepo-layout)
+  - [1.4 Module Boundaries and Dependency Rules](repository-structure-for-ai-systems.md#14-module-boundaries-and-dependency-rules)
+  - [1.5 Java Project Structure with Maven/Gradle](repository-structure-for-ai-systems.md#15-java-project-structure-with-mavengradle)
+- [Chapter 2 — Configuration Management](configuration-management.md)
+  - [2.1 The Configuration Problem in LLM Systems](configuration-management.md#21-the-configuration-problem-in-llm-systems)
+  - [2.2 Layered Configuration Architecture](configuration-management.md#22-layered-configuration-architecture)
+  - [2.3 Environment-Specific Configuration](configuration-management.md#23-environment-specific-configuration)
+  - [2.4 Secret Management](configuration-management.md#24-secret-management)
+  - [2.5 Configuration Validation at Startup](configuration-management.md#25-configuration-validation-at-startup)
+- [Chapter 3 — Dependency Management](dependency-management.md)
+  - [3.1 LLM SDK Dependency Risks](dependency-management.md#31-llm-sdk-dependency-risks)
+  - [3.2 Python Dependency Pinning](dependency-management.md#32-python-dependency-pinning)
+  - [3.3 Java Dependency Management with Maven BOM](dependency-management.md#33-java-dependency-management-with-maven-bom)
+  - [3.4 Dependency Scanning and Vulnerability Management](dependency-management.md#34-dependency-scanning-and-vulnerability-management)
+  - [3.5 Vendoring and Air-Gapped Deployments](dependency-management.md#35-vendoring-and-air-gapped-deployments)
+- [Chapter 4 — Documentation as Code 🧪](documentation-as-code.md)
+  - [4.1 Living Documentation for AI Systems](documentation-as-code.md#41-living-documentation-for-ai-systems)
+  - [4.2 Architecture Decision Records](documentation-as-code.md#42-architecture-decision-records)
+  - [4.3 Runbooks as Code](documentation-as-code.md#43-runbooks-as-code)
+  - [4.4 API Documentation with OpenAPI](documentation-as-code.md#44-api-documentation-with-openapi)
+  - [4.5 Automated Documentation Pipelines](documentation-as-code.md#45-automated-documentation-pipelines)
+  - [🧪 Hands-on Lab: ADR Pipeline](documentation-as-code.md#hands-on-lab-adr-pipeline)

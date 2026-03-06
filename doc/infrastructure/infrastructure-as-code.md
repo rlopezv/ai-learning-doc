@@ -343,7 +343,7 @@ python smoke_test.py
 ---
 
 > **Navigation**
-> [← Part XI — AI Platform Engineering](../platform_engineering/index.md) | [→ Part XIII — Observability](../observability/index.md)
+> [← Part XI — AI Platform Engineering](../platform-engineering/index.md) | [→ Part XIII — Observability](../observability/index.md)
 
 ---
 [« Back to infrastructure Index](index.md) | [🏠 Home](../index.md)
