@@ -1,285 +1,531 @@
-## Chapter 6 — Workflow Systems
+# Workflow Systems
 
-### 6.1 Workflow Orchestration for LLM Systems
-
-Agent architectures give the LLM control over execution flow. Workflow systems take a different approach: the developer defines a structured graph of steps — nodes and transitions — and the LLM operates within each node, but the overall flow is explicitly controlled by the application.
-
-This distinction is fundamental:
-
-| | Agent | Workflow |
-|---|---|---|
-| **Execution control** | LLM-driven | Developer-defined graph |
-| **Predictability** | Low | High |
-| **Flexibility** | High | Medium |
-| **Debuggability** | Hard | Easy |
-| **Cost predictability** | Variable | Bounded |
-| **Best for** | Open-ended tasks | Structured business processes |
-
-Workflow systems are the preferred pattern for Java/enterprise architects building production systems: they provide the reliability guarantees of deterministic software while incorporating LLM capabilities where they add value.
+[⬅ Back to Architectures](index.md)
 
 ---
 
-### 6.2 Deterministic vs. Adaptive Workflows
+## Context
 
-**Deterministic workflows** follow a fixed sequence:
+Prompt-based systems, retrieval architectures, and tool-augmented models enable powerful AI applications. However, many real-world tasks cannot be solved with a single model invocation or a simple tool interaction.
 
-```
-Input → Validate → Classify → Route → Process → Output
-```
+Complex tasks often require multiple coordinated steps such as:
 
-Every execution follows the same graph. The LLM performs specific steps (classification, extraction) but does not influence the overall flow.
+- retrieving relevant documents
+- performing structured analysis
+- executing tools
+- validating intermediate results
+- generating final responses
 
-**Adaptive workflows** use LLM decisions to determine transitions:
+For example, generating a financial report may require retrieving company data, performing calculations, analyzing trends, and composing a structured summary. Each of these steps may involve different models, tools, or processing stages.
 
-```
-Input → LLM Decision → Branch A or Branch B → ...
-```
+**Workflow systems** address this complexity by organizing AI system behavior into **structured execution pipelines**.
 
-The LLM output determines which path the workflow follows, but the available paths are still developer-defined — unlike a pure agent where paths are dynamically generated.
+Instead of relying on a single model call, workflow architectures define a sequence of operations that transform inputs into outputs through multiple coordinated stages.
 
-```mermaid
-flowchart TD
-    Trigger --> AgentWorkflow
-```
+These systems enable engineers to design **predictable, controllable AI pipelines** around probabilistic model components.
 
 ---
 
-### 6.3 LangGraph: Graph-Based Workflow Orchestration
+## Concept Overview
 
-LangGraph represents workflows as directed graphs where nodes are processing steps (LLM calls, tool calls, or Python functions) and edges are transitions (conditional or unconditional).
+A workflow system decomposes a task into a sequence of processing steps executed in a defined order.
 
-**Python — Document analysis workflow with LangGraph:**
-```python
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, Annotated
-import operator
+Each step performs a specific function within the overall pipeline.
 
-# Define shared state
-class WorkflowState(TypedDict):
-    document: str
-    classification: str
-    extracted_entities: dict
-    summary: str
-    routing_decision: str
-    final_output: dict
+A simplified workflow architecture looks like this:
 
-# Node functions
-def classify_document(state: WorkflowState) -> WorkflowState:
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "Classify document as: invoice, contract, report, other"},
-            {"role": "user", "content": state["document"]}
-        ],
-        temperature=0
-    )
-    return {"classification": response.choices[0].message.content.strip()}
-
-def extract_entities(state: WorkflowState) -> WorkflowState:
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "Extract key entities as JSON"},
-            {"role": "user", "content": state["document"]}
-        ],
-        response_format={"type": "json_object"},
-        temperature=0
-    )
-    return {"extracted_entities": json.loads(response.choices[0].message.content)}
-
-def summarize_document(state: WorkflowState) -> WorkflowState:
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "Summarize in 2-3 sentences"},
-            {"role": "user", "content": state["document"]}
-        ],
-        temperature=0.3
-    )
-    return {"summary": response.choices[0].message.content}
-
-def route_by_classification(state: WorkflowState) -> str:
-    """Conditional edge: returns name of next node based on state."""
-    classification = state["classification"].lower()
-    if "invoice" in classification:
-        return "process_invoice"
-    elif "contract" in classification:
-        return "process_contract"
-    return "process_general"
-
-def process_invoice(state: WorkflowState) -> WorkflowState:
-    return {"final_output": {"type": "invoice", "entities": state["extracted_entities"]}}
-
-def process_contract(state: WorkflowState) -> WorkflowState:
-    return {"final_output": {"type": "contract", "summary": state["summary"]}}
-
-def process_general(state: WorkflowState) -> WorkflowState:
-    return {"final_output": {"type": "general", "summary": state["summary"]}}
-
-# Build graph
-workflow = StateGraph(WorkflowState)
-
-workflow.add_node("classify", classify_document)
-workflow.add_node("extract", extract_entities)
-workflow.add_node("summarize", summarize_document)
-workflow.add_node("process_invoice", process_invoice)
-workflow.add_node("process_contract", process_contract)
-workflow.add_node("process_general", process_general)
-
-workflow.set_entry_point("classify")
-workflow.add_edge("classify", "extract")
-workflow.add_edge("classify", "summarize")
-workflow.add_conditional_edges("extract", route_by_classification)
-workflow.add_edge("process_invoice", END)
-workflow.add_edge("process_contract", END)
-workflow.add_edge("process_general", END)
-
-app = workflow.compile()
-
-# Execute
-result = app.invoke({"document": "Invoice #INV-2024-0847, Amount: $4,500, Due: 2024-12-15"})
-print(result["final_output"])
+```id="workflow-basic"
+User Request
+↓
+Task Decomposition
+↓
+Step 1: Retrieve Information
+↓
+Step 2: Execute Tools
+↓
+Step 3: Analyze Results
+↓
+Step 4: Generate Response
 ```
+
+Instead of relying on a single reasoning step inside the model, the system explicitly coordinates multiple operations.
+
+This approach allows engineers to introduce validation, control logic, and structured processing between model interactions.
 
 ---
 
-### 6.4 Workflow Systems for Java Architects
+## 1. Workflow Architecture Structure
 
-Java architects will find strong parallels between LLM workflow systems and familiar enterprise patterns:
+Workflow architectures introduce an **orchestration layer** responsible for coordinating system execution.
 
-| LLM Workflow concept | Java/Enterprise equivalent |
-|---|---|
-| State object | Command pattern payload / Event object |
-| Graph node | Service bean / Use case handler |
-| Conditional edge | Business rule router / Strategy pattern |
-| Workflow engine | BPM engine (Activiti, Camunda) |
-| LangGraph | Orchestration layer with LLM-enabled nodes |
-
-**Java — Workflow with [LangChain4j](https://docs.langchain4j.dev) and Spring:**
-```java
-import dev.langchain4j.service.AiServices;
-import org.springframework.stereotype.Service;
-
-@Service
-public class DocumentWorkflow {
-
-    private final DocumentClassifier classifier;
-    private final EntityExtractor extractor;
-    private final DocumentSummarizer summarizer;
-    private final InvoiceProcessor invoiceProcessor;
-    private final ContractProcessor contractProcessor;
-
-    public WorkflowResult process(String documentText) {
-        // Step 1: Classify
-        String classification = classifier.classify(documentText);
-
-        // Step 2: Parallel extraction and summarization
-        var entities = extractor.extract(documentText);
-        var summary = summarizer.summarize(documentText);
-
-        // Step 3: Route by classification
-        return switch (classification.toLowerCase()) {
-            case "invoice"   -> invoiceProcessor.process(entities, summary);
-            case "contract"  -> contractProcessor.process(entities, summary);
-            default          -> new GeneralResult(summary, entities);
-        };
-    }
-}
+```id="workflow-architecture"
+User
+↓
+Application
+↓
+Workflow Orchestrator
+↓
+Step 1: Retrieval
+↓
+Step 2: Tool Execution
+↓
+Step 3: Model Reasoning
+↓
+Step 4: Response Generation
 ```
 
-🔓 **On-premise workflow with [Temporal](https://docs.temporal.io) + [Ollama](https://ollama.com):**
-Temporal provides durable workflow execution with retries, timeouts, and state persistence — ideal for long-running AI workflows in air-gapped environments. Combined with Ollama for local LLM inference, it delivers a fully self-contained enterprise AI workflow platform.
+The orchestrator determines:
+
+- which steps must be executed
+- in what order they should run
+- how intermediate results are passed between components
+
+Each step in the workflow can involve:
+
+- model inference
+- tool execution
+- data transformation
+- validation logic
+
+This structured pipeline provides more control than architectures that rely solely on model reasoning.
 
 ---
 
-### 6.5 Production Workflow Patterns
+## 2. Task Decomposition
 
-**Pattern 1 — Map-Reduce:** Distribute processing across many documents in parallel, then aggregate results.
+Many complex AI tasks can be decomposed into smaller sub-tasks.
 
-```python
-from concurrent.futures import ThreadPoolExecutor
+Workflow systems explicitly represent this decomposition.
 
-def analyze_document_batch(documents: list[str]) -> list[dict]:
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(analyze_single, doc) for doc in documents]
-        return [f.result() for f in futures]
+Example:
 
-def aggregate_results(results: list[dict]) -> dict:
-    # LLM-based synthesis of individual results
-    summary_prompt = f"Synthesize these {len(results)} analyses into a report:\n{json.dumps(results)}"
-    ...
+```id="task-decomposition"
+User Request: Generate market analysis
+
+↓
+Retrieve financial reports
+↓
+Extract key metrics
+↓
+Perform statistical analysis
+↓
+Generate summary
 ```
 
-**Pattern 2 — Human-in-the-Loop:** Pause workflow execution pending human review at critical decision points.
+By breaking a task into smaller steps, systems can:
 
-```python
-class HumanReviewGate:
-    def __init__(self, review_queue_client):
-        self.queue = review_queue_client
+- improve reliability
+- validate intermediate results
+- reduce reasoning complexity for the model
 
-    def submit_for_review(self, task_id: str, content: dict) -> str:
-        """Submit to review queue and wait for decision."""
-        self.queue.push({"task_id": task_id, "content": content})
-        decision = self.queue.wait_for_decision(task_id, timeout_seconds=86400)
-        return decision  # "approved" | "rejected" | "modified"
-```
-
-**Pattern 3 — Retry with Fallback:** Handle LLM failures gracefully with model fallback.
-
-```python
-def resilient_llm_call(prompt: str, primary_model: str = "gpt-4o",
-                        fallback_model: str = "gpt-4o-mini") -> str:
-    for model in [primary_model, fallback_model]:
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                timeout=30
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            if model == fallback_model:
-                raise
-            continue
-```
+Task decomposition is often implemented using deterministic application logic rather than relying entirely on model reasoning.
 
 ---
 
-> ### 📋 Chapter Summary
->
-> - **Workflow systems** define explicit execution graphs where the developer controls flow; LLMs operate within individual nodes.
-> - The agent vs. workflow trade-off is predictability vs. flexibility: workflows are the preferred pattern for production enterprise systems.
-> - **LangGraph** represents workflows as stateful directed graphs with conditional edges driven by LLM output.
-> - Java architects will find strong parallels between LLM workflow patterns and established enterprise patterns (Command, Strategy, BPM).
-> - Production workflow patterns — Map-Reduce, Human-in-the-Loop, Retry with Fallback — address scale, compliance, and reliability requirements respectively.
+## 3. Workflow State and Data Flow
+
+Workflow systems typically maintain a **workflow state** that stores intermediate results produced during execution.
+
+This state allows different steps in the pipeline to share information.
+
+Example state flow:
+
+```id="workflow-state"
+User Request
+↓
+Retrieve Documents
+↓
+Documents stored in workflow state
+↓
+Extract Metrics
+↓
+Metrics stored in workflow state
+↓
+Generate Report
+```
+
+The workflow state may contain:
+
+- retrieved documents
+- intermediate model outputs
+- tool results
+- structured data extracted during processing
+
+Maintaining explicit workflow state helps systems manage complex pipelines and improves system transparency.
 
 ---
 
-> ### ❓ Comprehension Questions
->
-> 1. A compliance team requires that all AI-generated contract summaries be reviewed by a lawyer before being stored. How would you integrate a Human-in-the-Loop gate into a document workflow?
-> 2. Compare LangGraph to a BPM engine like Camunda. What capabilities does each provide that the other lacks?
-> 3. A document processing workflow must handle 10,000 documents per day. The current sequential implementation takes 8 hours. Design a parallel workflow architecture that reduces this to under 1 hour.
-> 4. In a workflow with conditional edges, the LLM classification step occasionally returns an unexpected value that doesn't match any defined route. How would you handle this defensively?
-> 5. A financial institution wants to use LLM-based workflows for loan approval decisions. What workflow pattern would you recommend, and what human oversight mechanisms are non-negotiable?
+## 4. Workflow Orchestration
+
+The orchestration component coordinates workflow execution.
+
+Typical responsibilities include:
+
+- managing step execution order
+- passing data between steps
+- handling errors and retries
+- managing tool invocation
+- collecting intermediate results
+
+Example orchestration flow:
+
+```id="workflow-orchestration"
+Start Workflow
+↓
+Retrieve Documents
+↓
+Execute Tool
+↓
+Validate Output
+↓
+Call LLM
+↓
+Return Result
+```
+
+In production systems, orchestration may be implemented using:
+
+- workflow engines
+- task schedulers
+- orchestration frameworks
+
+These systems allow engineers to build robust pipelines that combine deterministic processing with model reasoning.
+
+---
+
+## 5. Deterministic vs. Adaptive Workflows
+
+Workflow systems can be categorized based on how execution paths are determined.
+
+### Deterministic Workflows
+
+In deterministic workflows, the sequence of steps is predefined by the system.
+
+```id="deterministic-workflow"
+Step 1: Retrieve Documents
+↓
+Step 2: Extract Data
+↓
+Step 3: Run Analysis
+↓
+Step 4: Generate Report
+```
+
+The workflow always follows the same execution path.
+
+Deterministic workflows are commonly used in systems where the task structure is predictable.
+
+Examples include:
+
+- document processing pipelines
+- data enrichment pipelines
+- report generation systems
+
+### Adaptive Workflows
+
+Adaptive workflows introduce more flexible execution paths.
+
+Instead of following a fixed sequence, the system may decide dynamically which step should be executed next.
+
+```id="adaptive-workflow"
+User Query
+↓
+LLM analyzes task
+↓
+Choose next step
+↓
+Execute tool or retrieval
+↓
+Continue reasoning
+```
+
+Adaptive workflows often rely on language models to guide execution decisions.
+
+This approach allows systems to handle tasks where the required processing steps cannot be fully predefined.
+
+Adaptive workflows represent a transition toward **agent-based architectures**, where models dynamically determine system behavior.
+
+---
+
+## 6. Multi-Step Reasoning Pipelines
+
+Workflow architectures allow systems to implement **multi-step reasoning pipelines**.
+
+Instead of asking the model to solve a complex task in one step, the system coordinates multiple reasoning stages.
+
+Example pipeline:
+
+```id="reasoning-pipeline"
+User Question
+↓
+Retrieve Context
+↓
+Analyze Information
+↓
+Generate Intermediate Notes
+↓
+Produce Final Answer
+```
+
+This approach can improve system reliability because each stage focuses on a specific part of the task.
+
+---
+
+## 7. Integrating Retrieval and Tools
+
+Workflow systems commonly integrate multiple components such as retrieval pipelines, model reasoning, and external tools.
+
+Example integrated workflow:
+
+```id="workflow-integrated"
+User Query
+↓
+Workflow Orchestrator
+↓
+Retriever
+↓
+LLM Analysis
+↓
+Tool Execution
+↓
+LLM Response
+```
+
+The orchestrator coordinates interactions between these components and ensures that outputs from one step become inputs for the next step.
+
+This integration allows AI systems to combine:
+
+- knowledge retrieval
+- structured computation
+- model reasoning
+
+within a single execution pipeline.
+
+---
+
+## 8. Production Workflow Patterns
+
+Many real-world AI systems rely on reusable workflow patterns.
+
+These patterns represent common structures used to organize AI pipelines in production environments.
+
+### Document Processing Pipeline
+
+```id="document-pipeline"
+Document Input
+↓
+Chunking
+↓
+Information Extraction
+↓
+Analysis
+↓
+Structured Output
+```
+
+### Data Enrichment Pipeline
+
+```id="data-enrichment"
+Input Data
+↓
+Retrieve External Information
+↓
+Run Model Analysis
+↓
+Augment Dataset
+```
+
+### Analytical Report Pipeline
+
+```id="analysis-pipeline"
+User Request
+↓
+Retrieve Data
+↓
+Execute Analytical Tools
+↓
+Generate Summary
+↓
+Produce Final Report
+```
+
+These workflow patterns are widely used in enterprise systems and help engineers design reliable processing pipelines.
+
+---
+
+## 9. Advantages of Workflow Systems
+
+Workflow architectures provide several important advantages for production AI systems.
+
+### Improved Reliability
+
+Breaking tasks into smaller steps reduces the likelihood of model errors.
+
+### Greater Control
+
+Engineers can control the sequence of operations rather than relying entirely on model reasoning.
+
+### Intermediate Validation
+
+Systems can validate intermediate outputs before continuing execution.
+
+### Tool Integration
+
+Workflows make it easier to integrate tools, APIs, and external systems into the pipeline.
+
+These properties make workflow architectures suitable for **complex enterprise applications**.
+
+---
+
+## 10. Limitations and Trade-offs
+
+Although workflows provide more control, they introduce additional complexity.
+
+### System Complexity
+
+Workflow pipelines may involve many components and dependencies.
+
+### Increased Latency
+
+Each step adds additional processing time.
+
+### Engineering Effort
+
+Designing reliable workflows requires careful planning and system design.
+
+Despite these trade-offs, workflows are widely used in production AI systems that require predictable behavior.
+
+---
+
+## 11. Relationship to the AI Systems Reference Stack
+
+Workflow systems rely heavily on the **Orchestration Layer** of the AI Systems Reference Stack.
+
+```id="workflow-stack"
+Interaction Layer
+↓
+Application Layer
+↓
+Orchestration Layer
+↓
+Prompt Layer
+↓
+Retrieval Layer
+↓
+Model Layer
+↓
+Tool Interface
+↓
+Data Layer
+```
+
+The orchestration layer coordinates the execution of retrieval pipelines, tool interactions, and model calls.
+
+This layered architecture helps engineers understand where workflow logic belongs within the system.
+
+---
+
+## 12. Workflow Systems in Production
+
+Many enterprise AI systems rely on workflow architectures.
+
+Examples include:
+
+- automated document processing pipelines
+- financial analysis systems
+- research assistants
+- report generation platforms
+
+Example production workflow:
+
+```id="production-workflow"
+User Request
+↓
+Retrieve Documents
+↓
+Extract Structured Data
+↓
+Execute Analytical Tools
+↓
+Generate Report
+↓
+Deliver Output
+```
+
+These systems combine deterministic processing steps with model reasoning to produce reliable results.
+
+---
+
+## 13. From Workflows to Agents
+
+Workflow systems represent a structured approach to AI orchestration.
+
+However, some systems require more flexible reasoning, where the sequence of actions cannot be fully predetermined.
+
+This leads to **agent-based architectures**, where the model dynamically decides which actions to take.
+
+The architectural progression typically follows this pattern:
+
+```id="workflow-evolution"
+Prompt-Based Systems
+↓
+RAG Systems
+↓
+Tool-Augmented Systems
+↓
+Workflow Systems
+↓
+Agent Systems
+```
+
+Agent systems will be explored in the next chapter.
+
+---
+
+## Chapter Summary
+
+- Workflow systems organize AI applications into structured execution pipelines.
+- Tasks are decomposed into multiple processing stages coordinated by an orchestrator.
+- Workflow state stores intermediate results produced during execution.
+- Deterministic workflows follow predefined execution paths, while adaptive workflows dynamically determine processing steps.
+- Workflow architectures allow systems to integrate retrieval pipelines, tools, and model reasoning.
+
+---
+
+## Comprehension Questions
+
+1. Why are workflow systems necessary for complex AI tasks?
+2. What role does the orchestration layer play in workflow architectures?
+3. How do deterministic workflows differ from adaptive workflows?
+4. What types of information are stored in workflow state?
+5. What workflow patterns are commonly used in production AI systems?
+
+---
 
 ## References
 
-### Documentation
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph) — Graph-based workflow orchestration for LLM systems.
-- [Temporal Documentation](https://docs.temporal.io) — Durable workflow execution engine (on-premise).
-- [Apache Airflow Documentation](https://airflow.apache.org/docs) — Workflow orchestration for data pipelines.
-- [Prefect Documentation](https://docs.prefect.io) — Modern Python workflow orchestration.
-- [Argo Workflows](https://argoproj.github.io/argo-workflows/) — Kubernetes-native workflow engine.
-- [Spring AI Documentation](https://docs.spring.io/spring-ai/reference) — Spring-native AI integration for Java.
-- [Camunda BPMN Platform](https://docs.camunda.io) — Enterprise BPM engine for comparison.
-
 ### Papers
-- [Agents: An Open-source Framework for Autonomous Language Agents](https://arxiv.org/abs/2309.07870) — Zhou et al., 2023.
-- [TaskBench: Benchmarking Large Language Models for Task Automation](https://arxiv.org/abs/2311.18760) — Shen et al., 2023.
 
-### Articles
-- [Building Production-Ready LLM Applications](https://huyenchip.com/2023/04/11/llm-engineering.html) — Chip Huyen, 2023.
+ReAct: Synergizing Reasoning and Acting in Language Models — Yao et al., 2022
+[https://arxiv.org/abs/2210.03629](https://arxiv.org/abs/2210.03629)
+
+Chain-of-Thought Prompting Elicits Reasoning in Large Language Models — Wei et al., 2022
+[https://arxiv.org/abs/2201.11903](https://arxiv.org/abs/2201.11903)
+
+### Documentation
+
+LangChain Chains and Agents Documentation
+[https://python.langchain.com/docs/modules/chains/](https://python.langchain.com/docs/modules/chains/)
+
+Temporal Workflow Documentation
+[https://docs.temporal.io/](https://docs.temporal.io/)
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../index.md)
+
+## Key Takeaways
+
+- Workflow systems coordinate multiple processing steps within AI applications.
+- Orchestration layers manage execution order and data flow between components.
+- Workflow state enables systems to track intermediate results across pipeline stages.
+- Deterministic and adaptive workflows support different levels of execution flexibility.
+- Workflow architectures combine retrieval, tool execution, and model reasoning.

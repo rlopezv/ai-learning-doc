@@ -1,316 +1,341 @@
-## Chapter 3 — Retrieval-Augmented Generation
+# Retrieval-Augmented Generation
 
-### 3.1 Why RAG Is the Dominant Enterprise Pattern
-
-Enterprise knowledge has three properties that make LLM-only approaches fundamentally unsuitable for production use:
-
-**It is proprietary.** Internal policies, product documentation, customer data, contracts, and technical manuals exist nowhere in an LLM's training corpus. The model cannot answer questions about them.
-
-**It changes frequently.** Regulatory updates, product releases, organizational changes — enterprise knowledge is a living corpus. Fine-tuning a model for every update is economically and operationally impractical.
-
-**It is distributed.** A typical enterprise maintains knowledge across wikis, SharePoint, ticketing systems, databases, email archives, and cloud storage. No single ingestion pipeline covers all sources.
-
-Retrieval-Augmented Generation (RAG) addresses all three: it dynamically fetches relevant fragments from a maintained knowledge base at query time, injecting them into the prompt. The model reasons over current, proprietary knowledge without retraining.
+[⬅ Back to Architectures](index.md)
 
 ---
 
-### 3.2 RAG Architecture Overview
+## Context
 
-A RAG system consists of two distinct pipelines that operate independently:
+Prompt-based architectures rely entirely on the internal knowledge of language models. While this approach works well for many tasks, it introduces a major limitation: models cannot reliably access **external, private, or up-to-date information**.
 
-```mermaid
-flowchart TD
-    Docs --> Parsing --> Chunking --> Embeddings --> VectorDB
-```
+Large language models are trained on static datasets and therefore cannot directly retrieve information from proprietary documents, databases, or recent events. As a result, systems that rely only on prompts often struggle with factual accuracy and domain-specific knowledge.
 
-**Ingestion pipeline** (offline, batch or event-driven): transforms raw documents into a searchable vector index.
+**Retrieval-Augmented Generation (RAG)** addresses this limitation by combining language models with external knowledge retrieval systems. Instead of relying solely on the model’s training data, RAG systems dynamically retrieve relevant documents and include them in the prompt as context.
 
-```
+This architecture allows AI systems to generate responses grounded in **retrieved knowledge sources**, significantly improving factual accuracy and enabling the use of private data.
+
+RAG architectures have become one of the most widely used patterns for building production AI applications, especially for enterprise knowledge assistants, document analysis systems, and internal information retrieval tools.
+
+---
+
+## Concept Overview
+
+Retrieval-Augmented Generation integrates **information retrieval systems** with language model inference.
+
+Rather than generating responses from the model alone, the system retrieves relevant documents and injects them into the prompt.
+
+A simplified RAG pipeline looks like this:
+
+```id="rag-basic-flow"
 User Query
-     │
-     ▼
-Query Embedding → Vector Search → Reranking → Context Assembly
-                                                      │
-                                                      ▼
-                                               Prompt Builder → LLM → Answer
+↓
+Retriever
+↓
+Vector Database
+↓
+Relevant Documents
+↓
+Prompt Construction
+↓
+LLM
+↓
+Response
 ```
 
-**Query pipeline** (online, per-request): retrieves relevant context and generates the answer.
+In this architecture, the model receives both the user query and additional context retrieved from external sources.
 
-The separation is architecturally significant: the ingestion pipeline can be rerun independently when documents change, without affecting the query pipeline or the LLM.
+A key concept in RAG systems is **grounding**. Grounding refers to the process of constraining model responses using external information retrieved from reliable knowledge sources. Instead of relying solely on learned patterns in model parameters, the model reasons over retrieved documents that provide factual context.
+
+**Key Concept — Retrieval Extends Model Knowledge**
+
+RAG systems expand the capabilities of language models by providing access to external knowledge sources. This allows the model to reason over information that is not stored in its parameters and to generate responses grounded in retrieved context.
 
 ---
 
-### 3.3 Ingestion Pipeline
+## 1. Architecture Structure
 
-The ingestion pipeline transforms raw content into a searchable index. Each stage has design decisions with significant downstream impact.
+A typical RAG architecture introduces several new components compared to prompt-based systems.
 
-**Stage 1 — Document Parsing**
-
-Raw sources arrive in heterogeneous formats. A production parser handles each format and extracts clean text with metadata.
-
-```python
-from pathlib import Path
-from dataclasses import dataclass
-from typing import Optional
-
-@dataclass
-class ParsedDocument:
-    content: str
-    source: str
-    title: Optional[str]
-    metadata: dict
-
-class DocumentParser:
-    def parse(self, file_path: Path) -> ParsedDocument:
-        suffix = file_path.suffix.lower()
-        if suffix == ".pdf":
-            return self._parse_pdf(file_path)
-        elif suffix in (".html", ".htm"):
-            return self._parse_html(file_path)
-        elif suffix == ".md":
-            return self._parse_markdown(file_path)
-        else:
-            return self._parse_text(file_path)
-
-    def _parse_pdf(self, path: Path) -> ParsedDocument:
-        import pdfplumber
-        with pdfplumber.open(path) as pdf:
-            text = "\n".join(
-                page.extract_text() or "" for page in pdf.pages
-            )
-        return ParsedDocument(
-            content=text,
-            source=str(path),
-            title=path.stem,
-            metadata={"format": "pdf", "pages": len(pdf.pages)}
-        )
+```id="rag-architecture"
+User
+↓
+Application
+↓
+Retriever
+↓
+Vector Database
+↓
+Context Builder
+↓
+Prompt
+↓
+LLM
+↓
+Response
 ```
 
-**Stage 2 — Chunking**
+Key components include:
 
-Documents are split into retrievable fragments. Chunking strategy is one of the most consequential design decisions in a RAG system — covered in depth in **Part III, Chapter 1**. The core trade-off:
+- **retriever** — searches for relevant documents
+- **vector database** — stores embeddings used for semantic search
+- **context builder** — assembles retrieved documents into the prompt
+- **language model** — generates the final response
 
-```
-Chunk too small → insufficient context for the model to answer
-Chunk too large → retrieval noise, token budget pressure, diluted relevance
-```
-
-A reasonable production default for general-purpose RAG:
-
-```python
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=512,        # tokens
-    chunk_overlap=64,      # overlap to preserve cross-boundary context
-    length_function=len,   # replace with token counter in production
-    separators=["\n\n", "\n", ". ", " ", ""]
-)
-
-chunks = splitter.split_text(document.content)
-```
-
-**Stage 3 — Embedding Generation**
-
-Each chunk is converted to a dense vector representation using an embedding model.
-
-```python
-from openai import OpenAI
-
-client = OpenAI()
-
-def generate_embeddings(texts: list[str], model: str = "text-embedding-3-small") -> list[list[float]]:
-    response = client.embeddings.create(input=texts, model=model)
-    return [item.embedding for item in response.data]
-```
-
-🔓 **On-premise embedding generation:**
-```python
-from sentence_transformers import SentenceTransformer
-
-# No API calls — runs entirely locally
-model = SentenceTransformer("BAAI/bge-large-en-v1.5")
-embeddings = model.encode(chunks, batch_size=32, show_progress_bar=True)
-```
-
-**Stage 4 — Vector Indexing**
-
-Embeddings and their associated metadata are stored in a vector database.
-
-```python
-import chromadb
-from chromadb.config import Settings
-
-client = chromadb.PersistentClient(path="./chroma_db")
-collection = client.get_or_create_collection(
-    name="enterprise_docs",
-    metadata={"hnsw:space": "cosine"}
-)
-
-collection.add(
-    documents=chunks,
-    embeddings=embeddings,
-    metadatas=[{"source": doc.source, "chunk_index": i} for i, _ in enumerate(chunks)],
-    ids=[f"{doc.source}_{i}" for i in range(len(chunks))]
-)
-```
+These components work together to transform a user query into a response grounded in external information.
 
 ---
 
-### 3.4 Query Pipeline
+## 2. End-to-End System Flow
 
-The query pipeline executes at request time. Every millisecond matters here.
+In a production AI system, retrieval is only one stage within a larger execution pipeline.
 
-```python
-from openai import OpenAI
-from sentence_transformers import SentenceTransformer
-import chromadb
+A typical end-to-end flow in a RAG application looks like this:
 
-class RAGPipeline:
-    def __init__(self):
-        self.embedding_model = SentenceTransformer("BAAI/bge-large-en-v1.5")
-        self.vector_db = chromadb.PersistentClient(path="./chroma_db")
-        self.collection = self.vector_db.get_collection("enterprise_docs")
-        self.llm_client = OpenAI()
-
-    def retrieve(self, query: str, top_k: int = 5) -> list[str]:
-        query_embedding = self.embedding_model.encode(query).tolist()
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k
-        )
-        return results["documents"][0]
-
-    def generate(self, query: str, context_chunks: list[str]) -> str:
-        context = "\n\n---\n\n".join(context_chunks)
-        prompt = f"""You are a corporate knowledge assistant.
-Answer the question using only the provided context.
-If the answer is not in the context, state that explicitly.
-
-Context:
-{context}
-
-Question: {query}
-
-Answer:"""
-        response = self.llm_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0
-        )
-        return response.choices[0].message.content
-
-    def ask(self, query: str) -> dict:
-        chunks = self.retrieve(query)
-        answer = self.generate(query, chunks)
-        return {"answer": answer, "sources": chunks}
+```id="rag-end-to-end-flow"
+User
+↓
+Application Service
+↓
+Retriever
+↓
+Vector Database
+↓
+Context Builder
+↓
+Prompt Construction
+↓
+LLM
+↓
+Response
 ```
 
-**Java — RAG pipeline with [LangChain4j](https://docs.langchain4j.dev):**
-```java
-import dev.langchain4j.data.document.Document;
-import dev.langchain4j.data.document.splitter.DocumentSplitters;
-import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
-import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
-import dev.langchain4j.service.AiServices;
-import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+This pipeline illustrates how multiple components interact to transform a user request into a response grounded in external knowledge.
 
-interface KnowledgeAssistant {
-    @dev.langchain4j.service.SystemMessage("""
-        You are a corporate knowledge assistant.
-        Answer using only the provided context.
-        State explicitly if the answer is not in the context.
-        """)
-    String answer(String question);
-}
+Understanding this end-to-end execution flow helps engineers identify where errors occur and how system performance can be optimized.
 
-// Setup
-EmbeddingModel embeddingModel = OpenAiEmbeddingModel.builder()
-    .apiKey(System.getenv("OPENAI_API_KEY"))
-    .modelName("text-embedding-3-small")
-    .build();
+---
 
-EmbeddingStore<TextSegment> store = new InMemoryEmbeddingStore<>();
+## 3. The Retrieval Pipeline
 
-// Ingest documents
-Document doc = Document.from(documentText);
-DocumentSplitters.recursive(512, 64)
-    .split(doc)
-    .forEach(segment -> {
-        var embedding = embeddingModel.embed(segment).content();
-        store.add(embedding, segment);
-    });
+The retrieval pipeline is responsible for identifying relevant information from the knowledge base.
 
-// Build assistant with RAG
-KnowledgeAssistant assistant = AiServices.builder(KnowledgeAssistant.class)
-    .chatLanguageModel(chatModel)
-    .contentRetriever(EmbeddingStoreContentRetriever.from(store))
-    .build();
+Typical steps include:
 
-String answer = assistant.answer("What is the company refund policy?");
+```id="retrieval-pipeline"
+User Query
+↓
+Embedding Model
+↓
+Vector Search
+↓
+Candidate Documents
+↓
+Document Selection
 ```
 
----
+First, the query is converted into a vector representation using an **embedding model**.
 
-### 3.5 RAG Variants
+The vector database then performs a similarity search to identify documents whose embeddings are closest to the query.
 
-Standard RAG is the baseline. Several variants address specific limitations:
-
-**Naive RAG** — The pattern described above: retrieve, inject, generate. Simple and effective for well-structured knowledge bases.
-
-**Advanced RAG** — Adds pre-retrieval query processing (rewriting, expansion) and post-retrieval refinement (reranking, compression). Covered in **Part IV**.
-
-**Modular RAG** — Treats each pipeline stage as a configurable module. Different retrievers, rerankers, and generators can be swapped independently. Enables systematic experimentation.
-
-**[Self-RAG](https://arxiv.org/abs/2310.11511)** — The LLM decides at generation time whether retrieval is needed, and critiques its own retrieved context before generating the final answer. Reduces unnecessary retrieval overhead.
-
-**Corrective RAG (CRAG)** — Evaluates retrieved document quality and falls back to web search or alternative sources when retrieval quality is low.
-
-> **📐 Architecture recommendation:** Start with Naive RAG. Measure retrieval quality with explicit metrics (Recall@K, precision). Only introduce Advanced RAG complexity where measurement confirms it addresses a specific, quantified quality gap.
+The retrieved documents are returned to the application for further processing.
 
 ---
 
-> ### 📋 Chapter Summary
->
-> - RAG is the dominant enterprise LLM pattern because enterprise knowledge is proprietary, dynamic, and distributed — properties that LLM training cannot address.
-> - RAG consists of two independent pipelines: **ingestion** (offline) and **query** (online).
-> - Ingestion stages — parsing, chunking, embedding, indexing — each have design decisions that propagate through the entire system.
-> - **Chunking strategy** is the single most impactful RAG design decision; it is covered in depth in Part III.
-> - Multiple RAG variants (Advanced, Modular, Self-RAG, CRAG) address specific limitations of the basic pattern; select based on measured quality gaps.
+## 4. Context Construction
+
+After retrieval, the system must construct the prompt sent to the language model.
+
+This step is known as **context construction**.
+
+A typical prompt structure might look like:
+
+```id="rag-prompt-composition"
+System Prompt
++
+Retrieved Documents
++
+User Query
+```
+
+The retrieved documents provide the factual information the model should use when generating a response.
+
+Because language models have limited context windows, systems must carefully select and format retrieved documents to ensure that the most relevant information is included.
 
 ---
 
-> ### ❓ Comprehension Questions
->
-> 1. A RAG system returns correct chunks during retrieval but the LLM still produces hallucinated answers. What are the most likely causes, and how would you diagnose each?
-> 2. Explain why the embedding model used during ingestion and the one used at query time must be the same. What would happen if they differed?
-> 3. A knowledge base is updated daily with new regulatory documents. Describe the ingestion pipeline architecture that handles incremental updates without rebuilding the entire index.
-> 4. Compare Naive RAG and Modular RAG in terms of operational complexity, debuggability, and suitability for a team building their first RAG system.
-> 5. Why is `temperature=0` recommended for RAG generation tasks, and in what scenario might a higher temperature be appropriate?
+## 5. Advantages of RAG Architectures
+
+RAG architectures provide several important advantages compared to prompt-only systems.
+
+### Access to External Knowledge
+
+RAG systems can retrieve information from external documents, databases, and knowledge bases.
+
+### Improved Factual Accuracy
+
+Because responses are grounded in retrieved documents, hallucination rates can be reduced.
+
+### Support for Private Data
+
+Organizations can build AI systems that answer questions about internal documents or proprietary datasets.
+
+### Updatable Knowledge
+
+Knowledge bases can be updated without retraining the model.
+
+These properties make RAG architectures particularly well suited for **enterprise AI applications**.
+
+---
+
+## 6. Limitations of RAG Systems
+
+Although RAG significantly improves system capabilities, it also introduces new engineering challenges.
+
+### Retrieval Quality
+
+If the retriever returns irrelevant documents, the model may produce incorrect answers.
+
+### Context Window Constraints
+
+Only a limited number of documents can fit within the model’s context window.
+
+### Increased Latency
+
+Retrieval steps add additional processing time before generation occurs.
+
+### System Complexity
+
+Compared to prompt-based systems, RAG architectures require additional infrastructure such as vector databases and retrieval pipelines.
+
+These challenges are addressed through techniques such as:
+
+- better chunking strategies
+- improved embedding models
+- reranking algorithms
+- multi-stage retrieval pipelines
+
+---
+
+## 7. Relationship to the AI Systems Reference Stack
+
+RAG architectures span multiple layers of the **AI Systems Reference Stack**.
+
+```id="rag-stack"
+Interaction Layer
+↓
+Application Layer
+↓
+Orchestration Layer
+↓
+Prompt Layer
+↓
+Retrieval Layer
+↓
+Model Layer
+↓
+Data Layer
+```
+
+The most significant addition compared to prompt-based systems is the **Retrieval Layer**, which introduces new infrastructure for knowledge access.
+
+This layered perspective helps engineers reason about where retrieval pipelines belong in the system architecture.
+
+---
+
+## 8. Example Applications
+
+RAG architectures are commonly used in systems that must answer questions based on large collections of documents.
+
+Examples include:
+
+- enterprise knowledge assistants
+- document question-answering systems
+- research assistants
+- legal document analysis tools
+- technical documentation search systems
+
+Example flow for an enterprise assistant:
+
+```id="enterprise-rag-flow"
+User Question
+↓
+Retriever searches company documents
+↓
+Relevant documents returned
+↓
+Context inserted into prompt
+↓
+LLM generates answer
+↓
+Response returned to user
+```
+
+In this scenario, the system combines the reasoning capabilities of the language model with the organization’s internal knowledge base.
+
+---
+
+## 9. Evolution Toward Advanced RAG Systems
+
+Basic RAG architectures often evolve into more advanced retrieval systems.
+
+Typical improvements include:
+
+- multi-stage retrieval pipelines
+- reranking models
+- query rewriting
+- hybrid search (vector + keyword)
+- knowledge graph integration
+
+These techniques improve retrieval quality and system reliability.
+
+Later sections of the book explore these topics in detail within the **RAG Engineering** and **Advanced RAG** sections.
+
+---
+
+## Chapter Summary
+
+- Retrieval-Augmented Generation combines language models with external information retrieval systems.
+- RAG architectures retrieve relevant documents and include them in prompts sent to language models.
+- This approach improves factual accuracy and enables the use of private or domain-specific knowledge.
+- RAG systems introduce new architectural components such as vector databases, embedding models, and retrieval pipelines.
+- Although powerful, RAG systems introduce additional engineering challenges related to retrieval quality, context management, and latency.
+
+---
+
+## Comprehension Questions
+
+1. What problem does Retrieval-Augmented Generation solve in AI systems?
+2. What components are typically introduced in a RAG architecture?
+3. How does the retrieval pipeline identify relevant documents?
+4. Why is context construction important in RAG systems?
+5. What new engineering challenges arise when introducing retrieval systems?
 
 ---
 
 ## References
 
 ### Papers
-- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) — Lewis et al., 2020. The original RAG paper.
-- [Self-RAG: Learning to Retrieve, Generate and Critique](https://arxiv.org/abs/2310.11511) — Asai et al., 2023. Adaptive retrieval and self-critique.
-- [CRAG: Corrective Retrieval Augmented Generation](https://arxiv.org/abs/2401.15884) — Shi et al., 2024. Quality-aware retrieval with fallback strategies.
-- [RAGAS: Automated Evaluation of Retrieval Augmented Generation](https://arxiv.org/abs/2309.15217) — Es et al., 2023. Evaluation framework for RAG systems.
+
+Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks — Lewis et al., 2020
+[https://arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
+
+REALM: Retrieval-Augmented Language Model Pre-Training — Guu et al., 2020
+[https://arxiv.org/abs/2002.08909](https://arxiv.org/abs/2002.08909)
 
 ### Documentation
-- [LangChain RAG Tutorial](https://python.langchain.com/docs/tutorials/rag/) — End-to-end RAG implementation guide.
-- [LangChain4j RAG](https://docs.langchain4j.dev/tutorials/rag) — Java RAG implementation.
-- [Chroma Getting Started](https://docs.trychroma.com/getting-started) — Embedded vector database.
-- [Weaviate RAG Guide](https://weaviate.io/developers/weaviate/starter-guides/generative) — RAG with Weaviate.
-- [pdfplumber Documentation](https://github.com/jsvine/pdfplumber) — PDF text extraction.
 
-### Guides
-- [OpenAI Cookbook: RAG](https://cookbook.openai.com/examples/vector_databases/readme) — Practical RAG examples.
+LangChain Retrieval Documentation
+[https://python.langchain.com/docs/use_cases/question_answering/](https://python.langchain.com/docs/use_cases/question_answering/)
+
+LlamaIndex Documentation
+[https://docs.llamaindex.ai/](https://docs.llamaindex.ai/)
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../index.md)
+
+## Key Takeaways
+
+- Retrieval-Augmented Generation extends language models with external knowledge retrieval.
+- RAG architectures combine retrievers, vector databases, and language models.
+- Retrieved documents are inserted into prompts to ground model responses.
+- RAG systems introduce additional complexity but significantly improve factual accuracy and system capability.
+- Grounding model responses in retrieved context is a key mechanism for improving reliability in AI systems.

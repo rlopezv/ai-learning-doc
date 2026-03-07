@@ -1,496 +1,347 @@
-# Chapter 2 — Software 1.0 vs Software 2.0
+# Software 1.0 vs Software 2.0
 
 [⬅ Back to Foundations](index.md)
 
+---
+
 ## Context
 
-This chapter explains the conceptual shift from traditional software development to machine learning–driven systems. Understanding this shift is essential for **AI Systems Engineering** because it fundamentally changes how system behavior is defined, implemented, and maintained.
+To understand why modern AI systems are engineered differently from traditional software systems, it is useful to examine how software itself has evolved over time.
 
-In classical software systems, developers explicitly encode behavior using deterministic algorithms. In contrast, modern AI systems increasingly rely on models trained from data, where behavior emerges statistically rather than being directly programmed.
+Historically, software systems were built by explicitly programming rules and algorithms that transform inputs into outputs. However, many real-world problems—such as language understanding, image recognition, and knowledge extraction—are difficult to solve using deterministic rules alone.
 
-The distinction between **Software 1.0** and **Software 2.0** was popularized by Andrej Karpathy in his essay _Software 2.0_. The framework describes how modern systems increasingly move from handwritten logic toward learned behavior derived from data.
+Machine learning introduced a different paradigm: instead of writing explicit rules, engineers train models on large datasets so that systems **learn patterns from data**.
 
-This chapter introduces the concepts of **Software 1.0**, **Software 2.0**, and **LLM-based systems**, explaining how each paradigm defines and controls system behavior.
+Large language models (LLMs) represent a further evolution of this idea. Instead of training models for a single task, LLMs provide **general-purpose reasoning and language capabilities** that can be adapted to many tasks using prompts and contextual information.
 
-Understanding these paradigms provides a mental model for reasoning about the architecture of modern AI systems. In the broader **AI Systems Reference Stack**, these paradigms influence several layers:
+Understanding this progression—from rule-based software to model-driven systems—provides essential context for AI Systems Engineering.
 
-- **Application Layer** — deterministic application logic
-- **Model Layer** — trained machine learning models
-- **Prompt Layer** — structured instructions guiding model behavior
-- **Retrieval Layer** — contextual knowledge used during inference
+---
 
-Recognizing where each paradigm applies helps engineers design systems that combine deterministic logic with probabilistic AI capabilities.
+Modern AI systems are often described using a conceptual framework popularized by Andrej Karpathy: **Software 1.0 and Software 2.0**.
+
+This framework highlights a fundamental shift in how system behavior is defined and implemented.
+
+In traditional software, developers explicitly write the logic that determines system behavior. In machine learning systems, behavior emerges from patterns learned from data during training.
+
+As large language models become central components of applications, a further stage has effectively emerged: **systems where prompts and contextual information guide the behavior of large pretrained models**.
+
+Understanding these distinctions helps engineers reason about the architecture, development practices, and operational challenges of modern AI systems.
 
 ---
 
 ## Concept Overview
 
-The evolution of software systems can be understood through three stages.
+The evolution of software can be understood through three conceptual stages.
 
+```
 Software 1.0
-
-Code + Input → Output
-
+↓
 Software 2.0
-
-Training Data + Learning Algorithm → Model  
-Model + Input → Output
-
+↓
 LLM Systems
+```
 
-Model + Prompt + Context → Output
+Each stage represents a different way of defining system behavior.
 
-These paradigms represent different ways of defining system behavior.
+| Paradigm     | Behavior Defined By           | Primary Artifacts           |
+| ------------ | ----------------------------- | --------------------------- |
+| Software 1.0 | Hand-written code             | Source code                 |
+| Software 2.0 | Learned model parameters      | Training datasets + models  |
+| LLM Systems  | Prompts and contextual inputs | Prompts + knowledge sources |
 
-| Paradigm     | Behavior Defined By      | Key Artifact                  |
-| ------------ | ------------------------ | ----------------------------- |
-| Software 1.0 | Explicit code            | Source code                   |
-| Software 2.0 | Learned parameters       | Model weights                 |
-| LLM Systems  | Model + prompt + context | Prompts and retrieval context |
+In practice, modern AI systems often combine all three paradigms. Deterministic software components orchestrate probabilistic models, while prompts and contextual information guide model reasoning.
 
-A useful way to understand the transition is through the **control surface** of the system.
+**Key Concept — Software Behavior Can Be Programmed or Learned**
 
-The **control surface** refers to the primary artifact engineers modify in order to influence system behavior.
+Traditional software defines behavior through deterministic algorithms written by developers.
 
-| Paradigm     | Control Surface     |
-| ------------ | ------------------- |
-| Software 1.0 | Source code         |
-| Software 2.0 | Training data       |
-| LLM Systems  | Prompts and context |
+Machine learning systems define behavior through model parameters learned from data during training.
 
-A broader comparison highlights the engineering implications of these paradigms.
-
-| Aspect              | Software 1.0  | Software 2.0        | LLM Systems               |
-| ------------------- | ------------- | ------------------- | ------------------------- |
-| Behavior defined by | Code          | Training data       | Prompt + context          |
-| Primary artifact    | Source code   | Model weights       | Prompts                   |
-| Engineering focus   | Programming   | Model training      | Prompt + retrieval design |
-| Testing method      | Unit tests    | Evaluation datasets | System evaluation         |
-| Determinism         | Deterministic | Probabilistic       | Probabilistic             |
-
-Each paradigm shifts where engineering effort is applied when building and improving systems.
-
-A simplified comparison:
-
-Software 1.0
-
-Input  
-↓  
-Code  
-↓  
-Output
-
-Software 2.0
-
-Input  
-↓  
-Model  
-↓  
-Prediction
-
-LLM Systems
-
-Input  
-↓  
-Prompt + Context  
-↓  
-Model  
-↓  
-Generated Output
-
-In modern AI systems, these paradigms often coexist within a single architecture. Deterministic application logic may coordinate model inference, while prompts and retrieval pipelines shape how models behave.
-
-Understanding these differences is essential for designing modern AI systems.
+Modern AI systems frequently combine both approaches, using deterministic software infrastructure to control probabilistic model behavior.
 
 ---
 
-## 1.1 Software 1.0: Deterministic Programs
+## 3.1 Software 1.0 — Rule-Based Systems
 
-Traditional software systems are built from deterministic algorithms written by developers.
+**Software 1.0** refers to traditional software systems where behavior is explicitly defined by human-written code.
 
-Example structure:
+In this paradigm, developers implement algorithms that transform inputs into outputs through deterministic logic.
 
-Input  
-↓  
-Program Logic  
-↓  
+```
+Input
+↓
+Algorithm (Code)
+↓
 Output
-
-Developers explicitly specify:
-
-- control flow
-- decision rules
-- data transformations
-- algorithms
-
-Because the logic is deterministic, system behavior is predictable and reproducible. Given identical inputs, the program always produces the same output.
+```
 
 Typical characteristics of Software 1.0 systems include:
 
-- clearly defined logic
-- explicit control structures
-- strong reliance on unit testing
-- deterministic correctness guarantees
-- well-defined failure modes
+- deterministic behavior
+- explicitly defined rules
+- predictable execution paths
+- correctness verified through testing
 
-These systems are well suited for domains where rules can be clearly specified, such as:
+Examples of Software 1.0 systems include:
 
-- accounting systems
-- transaction processing
-- network protocols
-- compilers
-- database engines
+- web applications
+- database systems
+- operating systems
+- financial transaction systems
+- distributed infrastructure platforms
 
-However, many real-world problems do not have easily definable rules.
+Because system behavior is determined by code, developers can reason precisely about how the system will behave for any given input.
 
----
+Testing strategies such as **unit testing, integration testing, and static analysis** allow engineers to verify system correctness with high confidence.
 
-## 1.2 Limitations of Rule-Based Systems
-
-Tasks involving perception, language, or complex reasoning are difficult to encode using explicit rules.
-
-Examples include:
+However, Software 1.0 approaches struggle with problems where rules are difficult to specify explicitly, such as:
 
 - natural language understanding
 - speech recognition
-- image recognition
-- semantic search
-- conversational interaction
+- image classification
+- recommendation systems
+- anomaly detection
 
-Attempts to implement these capabilities using rule-based systems often lead to:
-
-- brittle logic
-- extremely large rule sets
-- high maintenance cost
-- limited scalability
-- poor generalization
-
-Rule-based systems typically struggle with **generalization**, the ability to handle new inputs not explicitly covered by predefined rules.
-
-For example, a rule-based system designed to parse language would require an enormous number of handcrafted rules to handle grammar variations, idioms, and ambiguity. Maintaining such systems becomes impractical as complexity grows.
-
-This limitation motivated the adoption of **machine learning techniques**, where systems learn patterns directly from data.
+These domains require systems capable of recognizing complex patterns in data.
 
 ---
 
-## 1.3 Software 2.0: Programs Learned from Data
+## 3.2 Software 2.0 — Learned Systems
 
-Machine learning introduces a new paradigm where system behavior is learned from data rather than directly written by developers.
+Machine learning introduced a new paradigm often referred to as **Software 2.0**.
 
-Instead of implementing explicit rules, engineers define:
+In Software 2.0 systems, developers do not explicitly program the decision logic. Instead, they design models that **learn patterns from data during training**.
 
-- a model architecture
-- a training procedure
-- a dataset
+```
+Training Data
++
+Learning Algorithm
+↓
+Trained Model
+```
 
-Training then produces a model whose parameters encode learned behavior.
+The trained model is then used during inference:
 
-Training Pipeline:
+```
+Input
+↓
+Trained Model
+↓
+Output
+```
 
-Dataset  
-↓  
-Training Pipeline  
-↓  
-Model  
-↓  
-Evaluation
+In this paradigm, system behavior is encoded in **model parameters** rather than source code.
 
-Inference Pipeline:
+Typical characteristics of Software 2.0 systems include:
 
-Input  
-↓  
-Model  
-↓  
-Prediction
+- behavior learned from data
+- probabilistic outputs
+- performance dependent on dataset quality
+- evaluation through statistical metrics
 
-In this paradigm:
+Examples of Software 2.0 applications include:
 
-- the **dataset** becomes a critical artifact
-- the **training process** replaces manual rule writing
-- the resulting **model parameters** encode system behavior
+- image recognition systems
+- recommendation engines
+- fraud detection systems
+- speech recognition systems
+- predictive analytics platforms
 
-Rather than editing code to change system behavior, engineers improve performance by:
+Developers no longer write rules that directly solve the problem. Instead, they define:
 
-- collecting better data
-- improving training procedures
-- tuning model architectures
-- refining evaluation metrics
-
-This shift transforms how software systems are built and maintained.
-
-Unlike deterministic programs, machine learning systems are **probabilistic**. Even when the same input is provided, small variations in model inference may produce different outputs.
-
----
-
-## 1.4 Characteristics of Software 2.0 Systems
-
-Software 2.0 systems differ from traditional software in several important ways.
-
-| Aspect              | Software 1.0     | Software 2.0        |
-| ------------------- | ---------------- | ------------------- |
-| Behavior source     | Handwritten code | Learned model       |
-| Development process | Programming      | Training            |
-| Primary artifact    | Source code      | Model weights       |
-| Testing             | Unit tests       | Evaluation datasets |
-| Determinism         | Deterministic    | Probabilistic       |
-
-Because behavior is learned rather than explicitly written, engineers must focus on:
-
-- dataset quality
-- training procedures
+- model architectures
+- training datasets
+- training objectives
 - evaluation metrics
-- model monitoring
-- experiment tracking
 
-Software 2.0 development therefore introduces new engineering practices such as:
+The resulting system behavior emerges from the training process.
 
-- dataset versioning
-- model evaluation pipelines
-- experiment management
-- automated retraining
+**Key Concept — Model Parameters Encode System Behavior**
 
-These challenges led to the emergence of **MLOps (Machine Learning Operations)** and specialized machine learning engineering practices.
+In Software 2.0 systems, behavior is not defined directly in source code. Instead, it is encoded in the numerical parameters learned by the model during training.
+
+Improving system behavior therefore involves improving training data, model architecture, or training processes rather than modifying program logic.
 
 ---
 
-## 1.5 From Software 2.0 to LLM Systems
+## 3.3 LLM Systems — Prompt-Guided Behavior
 
-Large language models introduce another shift in how AI capabilities are integrated into software systems.
+Large language models extend the Software 2.0 paradigm by introducing **general-purpose models that can perform many tasks without retraining**.
 
-Instead of training a new model for each task, engineers can reuse **pretrained foundation models** and control their behavior through prompts and contextual data.
+Unlike traditional machine learning systems where a model is trained for a specific task, LLMs are pretrained on massive datasets and can be adapted to new tasks using prompts and contextual information.
 
-Foundation models are large pretrained models trained on massive datasets that can be adapted to many tasks.
+Instead of retraining models for each new task, engineers guide model behavior using prompts.
 
-This results in a new inference structure:
-
+```
 Model
++
+Prompt
++
+Context
+↓
+Output
+```
 
-- Prompt
-- Context  
-  ↓  
-  Generated Output
+In LLM-based systems:
 
-In this paradigm:
+- the **model** provides general reasoning capabilities
+- the **prompt** defines instructions and task structure
+- the **context** provides task-specific or domain-specific information
 
-- the **model** provides general reasoning capability
-- the **prompt** defines task instructions
-- the **context** provides domain knowledge
-
-In some cases, engineers further adapt foundation models using techniques such as **fine-tuning**, **instruction tuning**, or **parameter-efficient adaptation** methods.
-
-Inference behavior can also be influenced by **decoding parameters**, such as:
-
-- temperature
-- top-p sampling
-- maximum token limits
-
-Unlike many Software 2.0 systems, LLM applications are often **inference-first systems**. Instead of training models from scratch, engineers focus primarily on how models are used during inference.
-
-This approach significantly reduces the cost and complexity of building intelligent systems, allowing a single model to support many tasks.
+This architecture allows a single model to perform many different tasks.
 
 Examples include:
 
-- summarization
-- question answering
-- code generation
-- document analysis
-- conversational assistants
+- chat assistants
+- coding copilots
+- document analysis systems
+- enterprise knowledge assistants
+- research assistants
 
----
-
-## 1.6 Prompts as System Artifacts
-
-In LLM-based systems, prompts become **first-class engineering artifacts**.
-
-Prompts define:
-
-- task instructions
-- reasoning structure
-- output format
-- constraints and behavioral guidelines
-
-Example prompt structure:
-
-System Prompt  
-↓  
-User Query  
-↓  
-Retrieved Context  
-↓  
-Model Response
-
-Because prompts strongly influence model behavior, they must be treated as managed artifacts within the system.
-
-This means prompts should be:
-
-- versioned
-- evaluated
-- iterated
-- integrated into system architecture
-
-Many modern systems also rely on **embeddings**, which represent text as numerical vectors. These embeddings enable **semantic search** and allow retrieval systems to find relevant information based on meaning rather than exact keyword matching.
-
-Because models operate within a limited **context window**, retrieval pipelines are often used to dynamically supply relevant information during inference.
-
-This architectural pattern is commonly known as **Retrieval-Augmented Generation (RAG)**.
-
-Prompt engineering therefore becomes a core part of AI system design.
-
-Because LLM systems depend on prompts, retrieval, and orchestration, **evaluation must occur at the system level**, rather than only at the model level.
-
----
-
-## 1.7 Architectural Implications
-
-The shift from Software 1.0 to AI-driven systems changes the architecture of modern applications.
-
-Traditional architecture:
-
-Application  
-↓  
-Deterministic Logic  
-↓  
-Database
-
-AI-driven architecture:
-
-User Query  
-↓  
-Application Layer  
-↓  
-Orchestration Layer  
-↓  
-Retriever  
-↓  
-Prompt + Context Builder  
-↓  
-Model Inference  
-↓  
-Tool Calls (optional)  
-↓  
-Response
-
-Some systems allow models to call **external tools**, such as:
-
-- APIs
-- databases
-- search engines
-- computation services
-
-These interactions enable models to retrieve data, perform calculations, or execute actions beyond pure text generation.
-
-In these systems, behavior emerges from interactions between multiple artifacts:
+LLM systems therefore introduce a new class of engineering artifacts:
 
 - prompts
-- models
+- system instructions
+- contextual knowledge sources
 - retrieval pipelines
-- embeddings
-- external tools
-- evaluation datasets
 
-Modern AI systems therefore behave as **artifact-driven systems**, where these artifacts collectively determine system behavior.
+Modern AI systems frequently extend this architecture with **external tools**, allowing models to interact with APIs, databases, calculators, and other computation systems. These tools allow models to perform actions that go beyond text generation.
 
-Because LLM inference is computationally expensive, engineers must also consider **latency and cost per query**. Token usage, model size, and the number of model calls directly influence operational cost.
+Engineers design systems that **shape model behavior through prompts, context, and tool usage rather than retraining models**.
 
-These components correspond to architectural layers introduced in the previous chapter, including:
+**Key Concept — Prompts Become a Form of Programming**
 
-- **Application Layer**
-- **Orchestration Layer**
-- **Prompt Layer**
-- **Retrieval Layer**
-- **Model Layer**
+In LLM systems, prompts act as a form of lightweight programming that defines tasks, constraints, and reasoning strategies for the model.
 
-Understanding how these layers interact is essential for designing scalable AI systems.
+While prompts do not provide deterministic control, they significantly influence how models interpret inputs and generate outputs.
 
 ---
 
-## 1.8 A Hybrid Paradigm
+## 3.4 Combining Software Paradigms
 
-Modern AI applications rarely rely exclusively on a single paradigm.
+Modern AI systems rarely rely on a single paradigm. Instead, they combine Software 1.0 and Software 2.0 approaches within the same architecture.
 
-Instead, they combine elements of all three.
+A typical AI system might include:
 
-Software 1.0  
-Application logic, APIs, orchestration
+- deterministic application services
+- machine learning models
+- prompts and contextual inputs
+- retrieval systems
+- workflow orchestration
 
-Software 2.0  
-Machine learning models and classifiers
+```
+User Request
+↓
+Application Logic (Software 1.0)
+↓
+Prompt + Context
+↓
+LLM Reasoning
+↓
+Response
+```
 
-LLM Systems  
-Prompt-driven reasoning and generation
+Deterministic software components manage:
 
-Example hybrid architecture:
+- application logic
+- system orchestration
+- tool execution
+- monitoring and observability
 
-User Query  
-↓  
-Application Logic (Software 1.0)  
-↓  
-Retriever (Software 2.0 components)  
-↓  
-Prompt Construction  
-↓  
-LLM Inference  
-↓  
-Generated Response
+Machine learning components provide capabilities such as:
 
-In practice:
+- language understanding
+- pattern recognition
+- reasoning and generation
 
-- **Software 1.0 components** manage system control and integration
-- **Software 2.0 components** provide specialized prediction capabilities
-- **LLM systems** provide flexible reasoning and language generation
+This hybrid architecture allows engineers to combine the strengths of both paradigms.
 
-This hybrid architecture is the foundation of most modern AI applications.
+**Key Concept — AI Systems Combine Deterministic and Probabilistic Components**
 
-Understanding how these paradigms interact is essential for designing **robust, scalable AI systems**.
+Modern AI systems integrate deterministic software infrastructure with probabilistic model behavior.
 
----
-
-## 📋 Chapter Summary
-
-- **Software 1.0** refers to traditional deterministic programs written explicitly by developers.
-- **Software 2.0** describes systems where behavior is learned from data using machine learning models.
-- The concept of Software 2.0 was popularized by Andrej Karpathy.
-- Large language model systems extend this paradigm by allowing engineers to reuse **foundation models** and guide their behavior through prompts and context.
-- Prompts and retrieval pipelines become first-class artifacts that influence model reasoning and output generation.
-- Many modern AI applications are **inference-first systems** that focus on prompt design and contextual information rather than model training.
-- Production AI systems typically combine **Software 1.0, Software 2.0, and LLM-based components** within a hybrid architecture.
+Reliable AI systems therefore require careful engineering of both components: traditional software infrastructure and machine learning systems.
 
 ---
 
-## ❓ Comprehension Questions
+## 3.5 Engineering Implications
+
+The shift from Software 1.0 to Software 2.0 has important implications for how systems are designed, tested, and operated.
+
+Traditional software engineering emphasizes:
+
+- algorithm correctness
+- deterministic behavior
+- strict test coverage
+
+AI systems require additional practices, including:
+
+- dataset management
+- evaluation frameworks
+- prompt engineering
+- monitoring of probabilistic outputs
+- continuous experimentation
+
+Because behavior emerges from data and model interactions, AI systems must be evaluated statistically rather than verified deterministically.
+
+| Traditional Engineering | AI Systems Engineering       |
+| ----------------------- | ---------------------------- |
+| Deterministic tests     | Statistical evaluation       |
+| Code versioning         | Artifact versioning          |
+| Debugging algorithms    | Debugging data and prompts   |
+| Static system behavior  | Iterative system improvement |
+
+Engineering teams must therefore adopt workflows that integrate **software engineering, data engineering, model evaluation, and system monitoring**.
+
+---
+
+## Chapter Summary
+
+- Software systems have evolved from rule-based programs to data-driven learning systems.
+- **Software 1.0** refers to traditional deterministic programs where behavior is defined by human-written code.
+- **Software 2.0** refers to machine learning systems where behavior emerges from model parameters learned from data.
+- **LLM systems** extend this paradigm by allowing model behavior to be shaped using prompts, context, and tool usage.
+- Modern AI applications combine deterministic software infrastructure with probabilistic models.
+- Building reliable AI systems requires new engineering practices such as dataset management, evaluation pipelines, and prompt engineering.
+
+---
+
+## Comprehension Questions
 
 1. What distinguishes Software 1.0 systems from Software 2.0 systems?
-2. Why do rule-based systems struggle with tasks such as language understanding or image recognition?
-3. What artifacts replace handwritten rules in Software 2.0 systems?
-4. How do LLM-based systems extend the Software 2.0 paradigm?
-5. What does it mean for an AI system to be **inference-first**?
-6. Why are prompts considered first-class artifacts in LLM-based systems?
-7. Why do modern AI systems often combine deterministic application logic with LLM-based reasoning?
+2. Why are some problems difficult to solve using deterministic algorithms alone?
+3. How do model parameters encode behavior in machine learning systems?
+4. Why do large language models allow many tasks to be performed without retraining?
+5. In what sense can prompts be considered a form of programming?
+6. Why do modern AI systems combine deterministic and probabilistic components?
 
 ---
 
 ## References
 
-### Articles
+### Papers
 
-Karpathy, Andrej. _Software 2.0_  
-https://karpathy.medium.com/software-2-0-a64152b37c35
+Attention Is All You Need — Vaswani et al., 2017
+[https://arxiv.org/abs/1706.03762](https://arxiv.org/abs/1706.03762)
 
-### Foundational Papers
+### Talks and Articles
 
-Vaswani et al. _Attention Is All You Need_  
-https://arxiv.org/abs/1706.03762
+Software 2.0 — Andrej Karpathy
+[https://karpathy.medium.com/software-2-0-a64152b37c35](https://karpathy.medium.com/software-2-0-a64152b37c35)
 
 ### Books
 
-Chip Huyen. _Designing Machine Learning Systems_. O'Reilly, 2022.
+Designing Machine Learning Systems — Chip Huyen, 2022
+[https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/)
 
-Martin Kleppmann. _Designing Data-Intensive Applications_. O'Reilly, 2017.
+---
 
-### Additional Resources
+## Key Takeaways
 
-OpenAI Documentation  
-https://platform.openai.com/docs
-
-Hugging Face Documentation  
-https://huggingface.co/docs
+- Software systems have evolved from rule-based programming to data-driven learning systems.
+- **Software 1.0** describes traditional software where behavior is defined by code.
+- **Software 2.0** describes machine learning systems where behavior is encoded in model parameters learned from data.
+- **LLM systems** extend this paradigm by allowing model behavior to be shaped using prompts and contextual information.
+- Modern AI systems combine deterministic software infrastructure with probabilistic model reasoning.
+- Effective AI Systems Engineering requires managing code, data, models, prompts, and evaluation artifacts together.

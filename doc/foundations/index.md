@@ -1,83 +1,208 @@
 # Foundations
 
-[⬅ Back to Main Table of Contents](../index.md)
+---
 
 ## Context
 
-Modern AI applications are not simply machine learning models exposed through APIs. They are **complex systems** that integrate models, prompts, retrieval pipelines, orchestration logic, and external tools.
+Modern AI applications are fundamentally different from traditional software systems.
+Instead of relying solely on deterministic algorithms, AI systems integrate probabilistic models, data pipelines, prompts, retrieval infrastructure, and orchestration logic.
 
-Building these systems requires a different engineering mindset than traditional software development. Engineers must reason about probabilistic models, data-driven behavior, prompt design, retrieval architectures, and evaluation pipelines.
+Because of this shift, building reliable AI-powered applications requires a new engineering discipline: **AI Systems Engineering**.
 
-The goal of the **Foundations** section is to introduce the core concepts that underpin modern **AI Systems Engineering**. These chapters establish the conceptual vocabulary and mental models needed to understand how AI systems are designed, built, and operated in production.
+The **Foundations** section introduces the core concepts required to understand how modern AI systems are designed, built, and operated. Rather than focusing on machine learning theory, these chapters establish the **system-level mental models** that engineers need when working with large language models and AI architectures.
 
-Rather than focusing on model training or machine learning theory, this section focuses on **system-level thinking**. It explains how modern AI applications combine software engineering practices with machine learning components and large language models.
+The goal of this section is to help readers understand:
 
-By the end of this section, readers will understand:
+- how AI systems differ from traditional software
+- how large language models behave
+- how engineers control model behavior
+- why modern AI architectures are necessary
 
-- how AI systems differ from traditional software systems
-- the architectural role of machine learning models and LLMs
-- the major types of AI system architectures
-- how tokens, prompts, and context influence system behavior
-- the limitations of large language models and their architectural implications
+By the end of this section, readers will understand the conceptual building blocks that underpin the rest of the book.
 
-These concepts form the foundation for the more advanced topics explored in later parts of the book, including **retrieval engineering, evaluation pipelines, platform infrastructure, and production operations**.
+---
+
+## Pedagogical Map of Foundations
+
+The seven chapters in this section follow a deliberate progression designed to introduce AI Systems Engineering in a structured way.
+
+Each chapter answers a specific question about how modern AI systems work.
+
+```id="i2drts"
+AI Systems Engineering
+        ↓
+AI System Types
+        ↓
+Software Paradigm Shift
+        ↓
+ML vs LLM Systems
+        ↓
+Tokens and Context
+        ↓
+Prompt Engineering
+        ↓
+Limitations of LLMs
+```
+
+This progression mirrors how engineers typically learn to reason about AI systems.
+
+### 1. Understanding AI Systems
+
+The section begins with **[Introduction to AI Systems Engineering](introduction-to-ai-systems-engineering.md)**, which explains how modern AI applications differ from traditional software and why AI systems must be engineered as composed systems rather than simple model calls.
+
+### 2. Understanding AI Architectures
+
+Next, **[AI System Types](ai-system-types.md)** introduces the main architectural categories used in modern AI applications, including prompt-based systems, retrieval-augmented systems, workflow systems, and agent systems.
+
+This chapter provides the architectural vocabulary used throughout the book.
+
+### 3. Understanding the Paradigm Shift
+
+**[Software 1.0 vs Software 2.0](software-10-vs-software-20.md)** explains the historical shift from deterministic programming to machine learning systems where behavior emerges from data.
+
+This chapter establishes the conceptual foundation for understanding why modern AI systems behave differently from traditional applications.
+
+### 4. Understanding Model Types
+
+**[Machine Learning vs LLM Systems](machine-learning-vs-llm.md)** explains how traditional machine learning models differ from modern large language models and how LLM-based systems shift engineering focus from training pipelines to inference architectures.
+
+### 5. Understanding Model Constraints
+
+**[Tokens and Context](tokens-and-context.md)** introduces the computational constraints of large language models, including tokenization and context windows.
+
+These constraints shape how prompts, retrieval pipelines, and system architectures must be designed.
+
+### 6. Understanding Model Control
+
+**[Prompt Engineering](prompt-engineering.md)** explains how prompts act as the primary interface for controlling model behavior and how prompt templates, patterns, and system prompts are used in production systems.
+
+### 7. Understanding Model Limitations
+
+Finally, **[Limitations of LLMs](limitations-of-llms.md)** explains the inherent weaknesses of language models, including hallucinations, reasoning limitations, knowledge boundaries, and non-deterministic outputs.
+
+These limitations explain why production AI systems rely on architectures such as retrieval pipelines, workflows, evaluation systems, and guardrails.
+
+---
+
+## How This Fits Together
+
+Although each chapter introduces a specific concept, modern AI applications combine these ideas into a single system architecture.
+
+A simplified AI system can be understood as a pipeline that transforms **user intent into model responses**.
+
+```id="b2k7hc"
+User Query
+↓
+Application Layer
+↓
+Prompt Builder
+↓
+Retriever
+↓
+Vector Database
+↓
+LLM Inference
+↓
+Response
+```
+
+Each stage of this pipeline corresponds to concepts introduced in the Foundations chapters.
+
+- **AI System Types** introduces the architectural patterns used to structure these pipelines.
+- **Tokens and Context** explains the computational limits that constrain how much information can be passed to the model.
+- **Prompt Engineering** describes how prompts structure the instructions and context used during model inference.
+- **Limitations of LLMs** explains why additional system components are required to improve reliability.
+
+In real-world AI systems, additional architectural layers are typically present. The **AI Systems Reference Stack** introduced earlier in the Foundations section helps organize these responsibilities.
+
+```id="4k3jpt"
+Interaction Layer
+↓
+Application Layer
+↓
+Orchestration Layer
+↓
+Prompt Layer
+↓
+Retrieval Layer
+↓
+Model Layer
+↓
+Data Layer
+↓
+Infrastructure Layer
+```
+
+This layered model illustrates how modern AI systems separate responsibilities across the stack.
+
+Understanding how these components interact is the central goal of **AI Systems Engineering**.
+
+The Foundations section therefore provides the conceptual framework needed to understand the more advanced architectures introduced later in the book.
+
+---
+
+## Why This Progression Matters
+
+This sequence is intentional.
+
+Engineers must first understand **how AI systems behave** before learning how to design complex architectures around them.
+
+The Foundations section therefore moves from:
+
+```id="y9tnmj"
+system concepts
+↓
+architectures
+↓
+models
+↓
+model constraints
+↓
+prompt control
+↓
+model limitations
+```
+
+By the end of this section, readers will understand why modern AI systems are built as **layered architectures composed of multiple interacting components**.
+
+This understanding prepares the reader for the rest of the book, which explores the engineering disciplines required to build production AI systems.
 
 ---
 
 ## Content
 
-The **Foundations** section introduces the fundamental concepts required to understand modern AI system architectures.
+The **Foundations** section includes the following chapters:
 
-- **[Chapter 1 — Introduction to AI Systems Engineering](introduction-to-ai-systems-engineering.md)**  
-  Introduces the discipline of AI Systems Engineering and explains how AI applications differ from traditional software systems.
+1. **[Introduction to AI Systems Engineering](introduction-to-ai-systems-engineering.md)**
+   Introduces the discipline of AI Systems Engineering and explains how modern AI systems differ from traditional software architectures.
 
-- **[Chapter 2 — Software 1.0 vs Software 2.0](software-10-vs-software-20.md)**  
-  Explains the shift from rule-based software to data-driven machine learning systems and how LLM-based systems extend this paradigm.
+2. **[AI System Types](ai-system-types.md)**
+   Describes the major architectural categories used in AI systems, including prompt-based systems, retrieval-augmented systems, workflow systems, and agent systems.
 
-- **[Chapter 3 — Machine Learning vs LLM](machine-learning-vs-llm.md)**  
-  Compares traditional machine learning models with large language models and explains when each approach is appropriate in system design.
+3. **[Software 1.0 vs Software 2.0](software-10-vs-software-20.md)**
+   Explains the paradigm shift from deterministic software to machine learning systems where behavior is learned from data.
 
-- **[Chapter 4 — AI System Types](ai-system-types.md)**  
-  Introduces common architectural patterns used in AI systems, including prompt-based systems, RAG architectures, workflow systems, and agent-based systems.
+4. **[Machine Learning vs LLM Systems](machine-learning-vs-llm.md)**
+   Compares traditional machine learning systems with modern large language model architectures.
 
-- **[Chapter 5 — Tokens and Context](tokens-and-context.md)**  
-  Explains how language models process information using tokens and context windows, and how these constraints influence system design.
+5. **[Tokens and Context](tokens-and-context.md)**
+   Explains how language models process text using tokens and how context windows constrain system design.
 
-- **[Chapter 6 — Prompt Engineering](prompt-engineering.md)**  
-  Introduces techniques for designing prompts that reliably control the behavior of language models in production systems.
+6. **[Prompt Engineering](prompt-engineering.md)**
+   Introduces prompt design techniques used to control model behavior and structure AI system inputs.
 
-- **[Chapter 7 — Limitations of Large Language Models](limitations-of-llms.md)**  
-  Examines the inherent limitations of LLMs, including hallucinations, reasoning errors, and security vulnerabilities, and explains how system architectures mitigate these issues.
+7. **[Limitations of LLMs](limitations-of-llms.md)**
+   Explains the inherent limitations of large language models and why AI systems require additional architectural components to ensure reliability.
 
 ---
 
-## How These Chapters Fit Together
+## What Comes Next
 
-The chapters in this section build progressively toward a system-level understanding of AI applications.
+After understanding the conceptual foundations of AI systems, the rest of the book explores the engineering disciplines required to build production systems:
 
-```
+- **RAG Engineering** — designing retrieval pipelines and knowledge systems
+- **Workflow and Agent Architectures** — orchestrating complex AI behaviors
+- **Evaluation Engineering** — measuring system quality and reliability
+- **Platform and Infrastructure Engineering** — operating AI systems at scale
 
-AI Systems Engineering
-│
-├ Software Paradigms
-│   ├ Software 1.0
-│   └ Software 2.0
-│
-├ Model Types
-│   ├ Machine Learning Models
-│   └ Large Language Models
-│
-├ System Architectures
-│   ├ Prompt Systems
-│   ├ Retrieval-Augmented Systems
-│   ├ Workflow Systems
-│   └ Agent Systems
-│
-└ System Constraints
-├ Tokens and Context
-├ Prompt Design
-└ LLM Limitations
-
-```
-
-Together, these topics provide the conceptual foundation necessary to understand the architecture and engineering practices used in modern AI systems.
+These topics build directly on the mental models introduced in the Foundations section.

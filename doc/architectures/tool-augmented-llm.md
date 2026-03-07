@@ -1,320 +1,394 @@
-## Chapter 4 — Tool-Augmented LLM
+# Tool-Augmented LLM Systems
 
-### 4.1 Extending LLMs with External Capabilities
-
-LLMs have two fundamental limitations that cannot be addressed by prompt engineering alone: they cannot access live data, and they cannot perform precise computation. Tool augmentation addresses both by giving the model the ability to invoke external functions and APIs.
-
-A tool-augmented LLM system intercepts the model's output, detects tool invocations encoded as structured function calls, executes the corresponding function, and returns the result to the model for further reasoning.
-
-```
-User query
-     │
-     ▼
-LLM reasons → decides a tool is needed
-     │
-     ▼
-Tool call specification (structured JSON)
-     │
-     ▼
-Application executes tool → returns result
-     │
-     ▼
-LLM continues reasoning with tool result
-     │
-     ▼
-Final response
-```
-
-```mermaid
-flowchart TD
-    Agent --> ToolRegistry --> API
-```
-
-This architecture transforms the LLM from a passive text generator into an active participant in multi-system workflows.
+[⬅ Back to Architectures](index.md)
 
 ---
 
-### 4.2 Function Calling
+## Context
 
-Modern LLM APIs ([OpenAI](https://platform.openai.com/docs), [Anthropic](https://docs.anthropic.com), Gemini) expose a standardized function calling interface. The developer defines available tools as JSON schemas; the model decides when and how to call them.
+Language models are powerful reasoning engines, but they have an important limitation: they cannot directly interact with external systems. A model can generate text describing an action, but it cannot execute that action on its own.
 
-**Python — Function calling with OpenAI:**
-```python
-import json
-from openai import OpenAI
+Many real-world tasks require interaction with external systems such as:
 
-client = OpenAI()
+- databases
+- APIs
+- search engines
+- calculators
+- code execution environments
 
-# Tool definitions as JSON schemas
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_customer_account",
-            "description": "Retrieve account information for a customer by email",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "description": "Customer email address"
-                    }
-                },
-                "required": ["email"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "calculate_refund",
-            "description": "Calculate the refund amount for an order",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "order_id": {"type": "string"},
-                    "reason": {"type": "string"}
-                },
-                "required": ["order_id", "reason"]
-            }
-        }
-    }
-]
+For example, answering a question about current weather, retrieving information from a company database, or performing a precise calculation requires access to external tools.
 
-# Actual tool implementations
-def get_customer_account(email: str) -> dict:
-    # In production: query your CRM or database
-    return {"email": email, "name": "Jane Smith", "plan": "enterprise", "status": "active"}
+**Tool-augmented LLM systems** extend language models with the ability to interact with external tools. In these architectures, the model determines when a tool should be used and generates structured instructions that allow the application to execute the tool.
 
-def calculate_refund(order_id: str, reason: str) -> dict:
-    # In production: query your billing system
-    return {"order_id": order_id, "refund_amount": 149.99, "currency": "USD"}
+This architectural pattern allows AI systems to perform tasks that go beyond text generation and interact with real-world systems.
 
-TOOL_REGISTRY = {
-    "get_customer_account": get_customer_account,
-    "calculate_refund": calculate_refund
+---
+
+## Concept Overview
+
+In a tool-augmented architecture, the language model can request the execution of external tools during the response generation process.
+
+A simplified tool interaction loop looks like this:
+
+```id="tool-loop"
+User Query
+↓
+LLM
+↓
+Tool Selection
+↓
+Tool Execution
+↓
+Tool Result
+↓
+LLM
+↓
+Final Response
+```
+
+The model analyzes the user query and decides whether an external tool should be used. If a tool is required, the model produces a structured instruction describing the tool call.
+
+The application then executes the tool and returns the result to the model, which incorporates the result into the final response.
+
+**Key Concept — Tools Extend Model Capabilities**
+
+Tool integration allows language models to perform actions that require external information or precise computation. Instead of relying solely on learned knowledge, the model can access external systems during execution.
+
+---
+
+## 1. Architecture Structure
+
+A typical tool-augmented architecture introduces a **tool interface layer** between the language model and external systems.
+
+```id="tool-architecture"
+User
+↓
+Application
+↓
+LLM
+↓
+Tool Interface
+↓
+External Tool
+↓
+Tool Result
+↓
+LLM
+↓
+Response
+```
+
+The application manages the interaction between the language model and the available tools.
+
+Typical tools include:
+
+- database queries
+- search APIs
+- calculation engines
+- code interpreters
+- external knowledge services
+
+The language model does not directly execute these tools. Instead, it produces instructions that the application interprets and executes.
+
+---
+
+## 2. Tool Registry
+
+In most production systems, available tools are defined in a **tool registry**.
+
+A tool registry is a structured catalog that describes the tools the model can use.
+
+Example structure:
+
+```id="tool-registry"
+Tool Registry
+│
+├ search_api
+├ database_query
+├ calculator
+└ weather_service
+```
+
+Each tool in the registry includes:
+
+- tool name
+- description
+- input parameters
+- execution method
+
+The registry allows the application to expose a set of tools to the model while maintaining control over what actions the system can perform.
+
+---
+
+## 3. Tool Invocation
+
+To use tools effectively, the system must define how the model can request tool execution.
+
+This is typically done using **structured tool descriptions**.
+
+Example tool definition:
+
+```id="tool-definition"
+Tool: get_weather
+Description: Retrieve the current weather for a given city.
+Parameters:
+- city (string)
+```
+
+When the model determines that this tool should be used, it generates a structured request such as:
+
+```id="tool-call"
+{
+  "tool": "get_weather",
+  "arguments": {
+    "city": "Madrid"
+  }
 }
-
-def run_tool_call(tool_name: str, tool_args: dict) -> str:
-    fn = TOOL_REGISTRY.get(tool_name)
-    if fn is None:
-        return json.dumps({"error": f"Unknown tool: {tool_name}"})
-    result = fn(**tool_args)
-    return json.dumps(result)
-
-def query_with_tools(user_message: str) -> str:
-    messages = [{"role": "user", "content": user_message}]
-
-    while True:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            tools=tools,
-            tool_choice="auto"
-        )
-        choice = response.choices[0]
-
-        # If no tool call, return final answer
-        if choice.finish_reason == "stop":
-            return choice.message.content
-
-        # Execute tool calls
-        messages.append(choice.message)
-        for tool_call in choice.message.tool_calls:
-            args = json.loads(tool_call.function.arguments)
-            result = run_tool_call(tool_call.function.name, args)
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": result
-            })
 ```
 
-**Java — Function calling with [LangChain4j](https://docs.langchain4j.dev):**
-```java
-import dev.langchain4j.agent.tool.Tool;
-import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.SystemMessage;
-
-// Tool implementations as annotated methods
-class CustomerTools {
-
-    @Tool("Retrieve account information for a customer by email")
-    public String getCustomerAccount(String email) {
-        // Query CRM/database
-        return String.format(
-            "{\"email\":\"%s\",\"name\":\"Jane Smith\",\"plan\":\"enterprise\"}",
-            email
-        );
-    }
-
-    @Tool("Calculate refund amount for an order")
-    public String calculateRefund(String orderId, String reason) {
-        // Query billing system
-        return String.format(
-            "{\"order_id\":\"%s\",\"refund_amount\":149.99,\"currency\":\"USD\"}",
-            orderId
-        );
-    }
-}
-
-interface SupportAssistant {
-    @SystemMessage("""
-        You are a customer support assistant with access to account and billing tools.
-        Use tools to retrieve accurate information before answering.
-        """)
-    String assist(String userQuery);
-}
-
-SupportAssistant assistant = AiServices.builder(SupportAssistant.class)
-    .chatLanguageModel(model)
-    .tools(new CustomerTools())
-    .build();
-
-String response = assistant.assist(
-    "What is the refund status for customer jane@example.com, order ORD-4892?"
-);
-```
+The application parses this request and executes the corresponding API call.
 
 ---
 
-### 4.3 Tool Registry Design
+## 4. Extending LLMs with External Capabilities
 
-In production systems with many tools, a registry pattern centralizes tool management and enables dynamic tool loading.
+Language models are powerful reasoning systems, but they are limited to the information contained in their training data and the context provided in the prompt.
 
-```python
-from typing import Callable, Any
-from dataclasses import dataclass
+Many tasks require capabilities that language models cannot perform directly, such as:
 
-@dataclass
-class ToolDefinition:
-    name: str
-    description: str
-    parameters_schema: dict
-    handler: Callable
-    requires_approval: bool = False  # For sensitive operations
+- retrieving real-time information
+- querying structured databases
+- executing precise computations
+- interacting with external services
 
-class ToolRegistry:
-    def __init__(self):
-        self._tools: dict[str, ToolDefinition] = {}
+Tool integration allows these capabilities to be **delegated to external systems**.
 
-    def register(self, tool: ToolDefinition):
-        self._tools[tool.name] = tool
+In a tool-augmented architecture, the language model focuses on **reasoning and decision-making**, while specialized tools perform the required operations.
 
-    def get_openai_schemas(self) -> list[dict]:
-        return [
-            {
-                "type": "function",
-                "function": {
-                    "name": t.name,
-                    "description": t.description,
-                    "parameters": t.parameters_schema
-                }
-            }
-            for t in self._tools.values()
-        ]
+This division of responsibilities can be understood as:
 
-    def execute(self, tool_name: str, args: dict) -> str:
-        tool = self._tools.get(tool_name)
-        if tool is None:
-            return json.dumps({"error": f"Tool not found: {tool_name}"})
-        if tool.requires_approval:
-            raise PermissionError(f"Tool '{tool_name}' requires human approval")
-        return json.dumps(tool.handler(**args))
+```id="capability-separation"
+LLM
+↓
+Reasoning
+Planning
+Tool Selection
+
+External Tools
+↓
+Computation
+Data Retrieval
+System Interaction
 ```
 
+By delegating specific tasks to external tools, AI systems can combine the **reasoning capabilities of language models** with the **precision and reliability of traditional software systems**.
+
+This architectural pattern enables AI applications to perform tasks that would otherwise be impossible for a standalone language model.
+
 ---
 
-### 4.4 Tool Safety and Sandboxing
+## 5. The Tool Interaction Loop
 
-Tools that execute code, modify data, or call external APIs introduce serious security risks if not properly controlled. The LLM must never be trusted to self-authorize sensitive operations.
+Tool-augmented systems often follow an iterative interaction loop.
 
-**Risk levels by tool type:**
-
-| Tool type | Risk level | Mitigation |
-|---|---|---|
-| Read-only data retrieval | Low | Input validation only |
-| Write operations (DB, files) | Medium | Explicit user confirmation |
-| API calls (external services) | Medium-High | Rate limiting, input sanitization |
-| Code execution | High | Sandbox isolation, timeout limits |
-| Financial transactions | Critical | Human-in-the-loop approval |
-
-**Python — Human-in-the-loop gate for sensitive tools:**
-```python
-class SafeToolExecutor:
-    def __init__(self, registry: ToolRegistry, approval_callback=None):
-        self.registry = registry
-        self.approval_callback = approval_callback
-
-    def execute(self, tool_name: str, args: dict) -> str:
-        tool = self.registry._tools.get(tool_name)
-        if tool and tool.requires_approval:
-            if self.approval_callback:
-                approved = self.approval_callback(tool_name, args)
-                if not approved:
-                    return json.dumps({"status": "rejected", "reason": "Human approval denied"})
-            else:
-                return json.dumps({"status": "rejected", "reason": "No approval mechanism configured"})
-        return self.registry.execute(tool_name, args)
+```id="tool-interaction-loop"
+User Query
+↓
+LLM Reasoning
+↓
+Tool Call
+↓
+Tool Execution
+↓
+Observation
+↓
+LLM Reasoning
+↓
+Final Response
 ```
 
+In this loop:
+
+1. The model analyzes the user query.
+2. The model decides whether a tool is required.
+3. The application executes the requested tool.
+4. The tool output is returned to the model.
+5. The model generates the final response.
+
+This interaction pattern allows models to incorporate external information into their reasoning process.
+
 ---
 
-### 4.5 Structured Tool Output Handling
+## 6. Multi-Tool Workflows
 
-Tool outputs must be sanitized before returning to the model. Raw API responses may contain excessive data, sensitive fields, or formats that confuse the model.
+Real-world AI systems often integrate multiple tools within the same interaction.
 
-```python
-def sanitize_tool_output(raw_output: dict, max_length: int = 2000) -> str:
-    """
-    Sanitize tool output before returning to LLM:
-    - Remove sensitive fields
-    - Truncate large responses
-    - Ensure JSON serializable
-    """
-    sensitive_fields = {"password", "api_key", "secret", "token", "ssn", "credit_card"}
-    cleaned = {k: v for k, v in raw_output.items() if k.lower() not in sensitive_fields}
+Example multi-tool interaction:
 
-    serialized = json.dumps(cleaned, default=str)
-    if len(serialized) > max_length:
-        serialized = serialized[:max_length] + "... [truncated]"
-    return serialized
+```id="multi-tool-example"
+User Query
+↓
+LLM selects Search API
+↓
+Search results returned
+↓
+LLM selects Calculator
+↓
+Calculation performed
+↓
+LLM generates final answer
 ```
 
----
+In this scenario, the model combines information retrieved from a search engine with precise computation from a calculator.
 
-> ### 📋 Chapter Summary
->
-> - Tool augmentation extends LLMs with the ability to call external functions, APIs, and databases — addressing the fundamental limitations of knowledge cutoff and computational precision.
-> - **Function calling** is the standard interface: developer-defined JSON schemas, model-generated invocations, application-executed handlers.
-> - A **tool registry** centralizes tool management and enables fine-grained access control.
-> - **Tool safety** is a first-class engineering concern: sensitive operations require explicit human approval gates, not LLM self-authorization.
-> - Tool outputs must be sanitized before returning to the model to prevent data leakage and context confusion.
+This ability to chain tools together enables more complex problem-solving workflows.
 
 ---
 
-> ### ❓ Comprehension Questions
->
-> 1. A tool-augmented LLM has access to a tool that can delete database records. What architectural controls would you put in place before deploying this system to production?
-> 2. Explain the execution loop for function calling. Why does the application (not the LLM) execute the actual tool call?
-> 3. A financial services company wants to use tool-augmented LLM to automate expense approvals. The LLM would call a payment API to approve or reject expenses. What concerns does this raise, and how would you architect the system?
-> 4. What is the risk of returning raw API responses directly to the LLM without sanitization?
-> 5. Compare the tool registry pattern to a Java ServiceLocator or Spring ApplicationContext. What does the analogy reveal about the engineering requirements?
+## 7. Advantages of Tool-Augmented Systems
+
+Tool integration significantly expands the capabilities of AI systems.
+
+### Access to Real-Time Data
+
+Tools allow models to retrieve current information from external systems.
+
+### Precise Computation
+
+Models can delegate mathematical operations to calculators or code execution engines.
+
+### System Integration
+
+AI systems can interact with enterprise systems, databases, and APIs.
+
+### Expanded Capabilities
+
+Combining reasoning with tool usage enables systems to perform complex multi-step tasks.
+
+These capabilities are essential for many production AI applications.
+
+---
+
+## 8. Limitations and Challenges
+
+Despite their advantages, tool-augmented systems introduce new engineering challenges.
+
+### Tool Selection Errors
+
+The model may choose an incorrect tool or misuse the tool interface.
+
+### Tool Reliability
+
+External tools may fail or return unexpected results.
+
+### Latency
+
+Calling external services can increase response times.
+
+### Security Risks
+
+Improperly controlled tool access may expose sensitive systems.
+
+These challenges require careful system design, validation, and monitoring.
+
+---
+
+## 9. Relationship to the AI Systems Reference Stack
+
+Tool-augmented architectures extend the **AI Systems Reference Stack** by introducing tool interaction capabilities within the orchestration process.
+
+```id="tool-stack"
+Interaction Layer
+↓
+Application Layer
+↓
+Orchestration Layer
+↓
+Prompt Layer
+↓
+Model Layer
+↓
+Tool Interface
+↓
+Tool Registry
+↓
+External Tools
+↓
+Data Layer
+```
+
+In most systems, the **Orchestration Layer** manages tool invocation and integrates tool outputs into the model workflow.
+
+This layered perspective helps engineers understand how tool interaction fits into the broader AI system architecture.
+
+---
+
+## 10. From Tools to Agents
+
+Tool-augmented systems represent an intermediate step between simple prompt systems and more autonomous architectures.
+
+The progression typically follows this pattern:
+
+```id="architecture-evolution"
+Prompt-Based Systems
+↓
+RAG Systems
+↓
+Tool-Augmented Systems
+↓
+Workflow Systems
+↓
+Agent Systems
+```
+
+In later chapters, we will see how these systems evolve into **workflow-based architectures**, where tool usage and reasoning steps are coordinated by structured pipelines.
+
+---
+
+## Chapter Summary
+
+- Tool-augmented LLM systems allow language models to interact with external tools.
+- Models generate structured tool requests that the application executes.
+- Tool registries define which tools are available to the system.
+- Tool integration extends language model capabilities by delegating tasks to specialized external systems.
+- These systems combine model reasoning with traditional software operations.
+
+---
+
+## Comprehension Questions
+
+1. Why do language models require external tools for many real-world tasks?
+2. What role does a tool registry play in a tool-augmented architecture?
+3. How does a language model request the execution of a tool?
+4. What types of tools are commonly used in tool-augmented AI systems?
+5. What engineering challenges arise when integrating tools into AI systems?
 
 ---
 
 ## References
 
 ### Papers
-- [Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761) — Schick et al., 2023.
-- [HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering](https://arxiv.org/abs/1809.09600) — Yang et al., 2018. Multi-step reasoning foundation.
-- [API-Bank: A Comprehensive Benchmark for Tool-Augmented LLMs](https://arxiv.org/abs/2304.08244) — Li et al., 2023.
+
+Toolformer: Language Models Can Teach Themselves to Use Tools — Schick et al., 2023
+[https://arxiv.org/abs/2302.04761](https://arxiv.org/abs/2302.04761)
+
+ReAct: Synergizing Reasoning and Acting in Language Models — Yao et al., 2022
+[https://arxiv.org/abs/2210.03629](https://arxiv.org/abs/2210.03629)
 
 ### Documentation
-- [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling) — Official function calling reference.
-- [LangChain4j Tools](https://docs.langchain4j.dev/tutorials/tools) — Java tool integration.
-- [Anthropic Tool Use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use) — Claude tool use documentation.
-- [OWASP LLM Top 10 — LLM07: Insecure Plugin Design](https://owasp.org/www-project-top-10-for-large-language-model-applications/) — Security guidance for tool-augmented systems.
+
+OpenAI Function Calling Documentation
+[https://platform.openai.com/docs/guides/function-calling](https://platform.openai.com/docs/guides/function-calling)
+
+Anthropic Tool Use Documentation
+[https://docs.anthropic.com/claude/docs/tool-use](https://docs.anthropic.com/claude/docs/tool-use)
 
 ---
-[« Back to architectures Index](index.md) | [🏠 Home](../index.md)
+
+## Key Takeaways
+
+- Tool-augmented architectures extend language models with external capabilities.
+- Tool registries define which tools are available to the model.
+- Language models focus on reasoning while external tools perform specialized operations.
+- Tool interaction enables AI systems to access real-time information and perform complex tasks.
+- These systems form the foundation for workflow-based and agent architectures.

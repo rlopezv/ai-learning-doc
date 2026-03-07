@@ -1,176 +1,386 @@
 # AI Systems Reference Stack
 
+[⬅ Back to Architectures](index.md)
+
+---
+
 ## Context
 
-This chapter introduces a reference stack for reasoning about AI systems as layered engineering systems instead of isolated model calls. Many chapters in the book describe individual capabilities such as prompts, retrieval, model access, evaluation, or infrastructure. This chapter provides the unifying architectural frame that connects them.
+Modern AI applications are not built as single model calls. Instead, they are **composed systems** made of multiple layers of functionality that interact to process user requests, retrieve knowledge, execute tasks, and generate responses.
 
-## Concept
+As AI systems grow in complexity, engineers need a structured way to reason about how different components interact. Without a clear architectural model, it becomes difficult to design systems, debug failures, or reason about operational responsibilities.
 
-An AI system can be decomposed into layers, each with a distinct responsibility. This layered view helps engineers reason about:
+The **AI Systems Reference Stack** provides a conceptual architecture for organizing the components of modern AI systems. It separates responsibilities into layers that represent different concerns of the system.
 
-- separation of concerns
-- ownership boundaries
-- scaling strategies
-- failure isolation
-- where a design decision belongs
+This layered model helps engineers understand:
 
-The purpose of a reference stack is not to prescribe a single implementation, but to make architectural conversations more precise.
+- where different components belong in the system
+- how data flows between components
+- how responsibilities are separated across the architecture
 
-## The Stack
+The stack introduced in this chapter serves as a **reference architecture used throughout the book** to explain how AI systems are designed and operated.
 
-### 1. Interaction Layer
+The following chapters in the **Architectures** section describe architectural patterns built on top of this stack, including prompt-based systems, retrieval-augmented systems, workflow architectures, and agent systems.
 
-This is where users or upstream systems interact with the AI system.
+---
 
-Typical components:
+## Concept Overview
+
+The AI Systems Reference Stack organizes an AI system into a set of conceptual layers, each responsible for a specific part of system behavior.
+
+```id="stack-overview"
+Interaction Layer
+↓
+Application Layer
+↓
+Orchestration Layer
+↓
+Prompt Layer
+↓
+Retrieval Layer
+↓
+Model Layer
+↓
+Data Layer
+↓
+Infrastructure Layer
+```
+
+Each layer represents a different level of abstraction in the system.
+
+Higher layers focus on **user interaction and application logic**, while lower layers provide **models, data, and infrastructure** that support system execution.
+
+This layered architecture is similar to reference models used in other areas of software engineering, such as the **OSI networking model** or layered cloud architectures.
+
+Not every AI system includes every layer. Simpler systems may omit components such as retrieval or orchestration, while more advanced architectures incorporate additional layers and services.
+
+---
+
+## 1. Interaction Layer
+
+The **Interaction Layer** represents how users or external systems communicate with the AI application.
+
+Examples include:
 
 - chat interfaces
-- APIs
-- CLI tools
-- embedded copilots
-- workflow triggers
+- web applications
+- mobile applications
+- API endpoints
+- messaging platforms
+- voice interfaces
 
-This layer should remain thin. It handles presentation and request entry, not core AI logic.
+Example flow:
 
-### 2. Application Layer
+```id="interaction-flow"
+User
+↓
+Chat Interface
+↓
+AI Application
+```
 
-The application layer contains product logic and business behavior. It defines what the system is supposed to do from a product perspective.
+This layer focuses on **user experience and request handling** rather than AI-specific processing.
 
-Typical responsibilities:
+Responsibilities typically include:
 
-- session handling
-- authorization decisions
-- routing based on business rules
-- user-specific behavior
-- escalation and fallback logic
+- user input collection
+- request formatting
+- authentication
+- session management
 
-### 3. Orchestration Layer
+---
 
-The orchestration layer coordinates model calls, retrieval, tools, memory, and multi-step flows.
+## 2. Application Layer
 
-Typical responsibilities:
+The **Application Layer** contains the main business logic of the system.
 
-- prompt assembly
-- retrieval coordination
-- workflow state transitions
-- tool selection and execution
-- response composition
+This layer determines how user requests are interpreted and how the system should respond.
 
-In many production systems, this is the most architecture-sensitive layer.
+Example:
 
-### 4. Prompt Layer
+```id="application-flow"
+User Request
+↓
+Application Service
+↓
+Task Definition
+```
 
-The prompt layer contains the instructions and templates that shape model behavior.
+Typical responsibilities include:
 
-Typical responsibilities:
+- request interpretation
+- task routing
+- business logic execution
+- integration with application services
 
-- system prompts
-- task prompts
-- response schemas
-- few-shot examples
-- prompt versioning
+For example, an enterprise assistant may determine whether a request requires:
 
-This layer is often underestimated. In practice, prompt artifacts behave like configuration and must be managed with the same rigor.
+- document retrieval
+- data analysis
+- report generation
+- question answering
 
-### 5. Retrieval Layer
+---
 
-The retrieval layer provides external knowledge to the model.
+## 3. Orchestration Layer
 
-Typical responsibilities:
+The **Orchestration Layer** coordinates the sequence of operations required to complete a task.
 
-- query transformation
-- embedding search
-- metadata filtering
-- reranking
-- context assembly
+AI systems often require multiple steps such as:
 
-This layer is central to RAG systems, but absent in pure prompt-only systems.
+- retrieving documents
+- calling tools
+- performing reasoning steps
+- validating responses
 
-### 6. Model Layer
+Example orchestration flow:
 
-The model layer provides inference capabilities.
+```id="orchestration-flow"
+User Query
+↓
+Orchestrator
+↓
+Retrieve Context
+↓
+Call Tool
+↓
+Generate Response
+```
 
-Typical components:
+The orchestrator determines **how different system components interact** during execution.
 
-- LLM APIs
-- local model runtimes
+Typical orchestration technologies include:
+
+- workflow engines
+- agent frameworks
+- orchestration services
+
+---
+
+## 4. Prompt Layer
+
+The **Prompt Layer** is responsible for constructing the prompts sent to language models.
+
+Prompts define:
+
+- system instructions
+- task context
+- user input
+- formatting constraints
+
+Example prompt composition:
+
+```id="prompt-composition"
+System Prompt
++
+Task Instructions
++
+Retrieved Context
++
+User Query
+```
+
+Prompt templates are often treated as **versioned artifacts** that can evolve over time.
+
+Effective prompt construction is essential for controlling model behavior and producing reliable outputs.
+
+---
+
+## 5. Retrieval Layer
+
+The **Retrieval Layer** provides access to external knowledge sources.
+
+Because language models cannot store all relevant information, retrieval systems allow AI applications to incorporate **domain-specific or up-to-date knowledge**.
+
+Example retrieval pipeline:
+
+```id="retrieval-pipeline"
+User Query
+↓
+Embedding Model
+↓
+Vector Search
+↓
+Relevant Documents
+↓
+Context Builder
+```
+
+Typical retrieval components include:
+
 - embedding models
-- rerankers
-- moderation or classifier models
-
-This layer should usually be accessed through abstraction points rather than embedded directly into application logic.
-
-### 7. Data Layer
-
-The data layer contains the artifacts and stores that the AI system depends on.
-
-Typical components:
-
-- document stores
 - vector databases
-- relational data
-- prompt registries
+- search indexes
+- document stores
+
+Retrieval pipelines are a core component of **Retrieval-Augmented Generation (RAG)** systems.
+
+---
+
+## 6. Model Layer
+
+The **Model Layer** contains the machine learning models responsible for reasoning and generation.
+
+Examples include:
+
+- large language models
+- embedding models
+- reranking models
+- classification models
+
+Example model interaction:
+
+```id="model-interaction"
+Prompt
+↓
+LLM
+↓
+Generated Output
+```
+
+This layer performs the core tasks of:
+
+- language understanding
+- reasoning
+- text generation
+- semantic representation
+
+Model selection and configuration strongly influence system behavior and performance.
+
+---
+
+## 7. Data Layer
+
+The **Data Layer** stores the information used by AI systems.
+
+This includes:
+
+- documents
+- knowledge bases
+- embeddings
 - evaluation datasets
-- model metadata
+- training datasets
 
-This layer is broader than a traditional database layer because it includes all persistent AI artifacts.
+Example structure:
 
-### 8. Infrastructure Layer
+```id="data-layer"
+Documents
+Embeddings
+Evaluation Sets
+Knowledge Sources
+```
 
-The infrastructure layer supports the runtime environment.
+The quality of the data layer has a major impact on system performance and reliability.
 
-Typical components:
+Data pipelines are often responsible for preparing and updating these datasets.
 
-- containers
-- compute nodes
+---
+
+## 8. Infrastructure Layer
+
+The **Infrastructure Layer** provides the computational resources required to run the system.
+
+This includes:
+
+- cloud compute
 - GPUs
-- queues
-- object storage
 - networking
-- observability backends
+- storage systems
+- model inference services
 
-This layer determines the operational limits of the system, but should not leak directly into product logic.
+Example infrastructure stack:
 
-## Why the Stack Matters
+```id="infrastructure-stack"
+Cloud Platform
+↓
+GPU Infrastructure
+↓
+Model Serving
+↓
+AI Application
+```
 
-The reference stack is useful because it helps answer questions such as:
+This layer ensures the system can operate at scale while maintaining acceptable latency and reliability.
 
-- Is this problem about prompts, orchestration, or retrieval?
-- Which team should own this capability?
-- Which layers change when the embedding model changes?
-- Where should observability be instrumented?
-- Which layers are affected when moving from prototype to production?
+---
 
-Without a layered model, AI systems often become a collection of tightly coupled scripts around a model API.
+## 9. End-to-End Flow
 
-## Design Considerations
+Although these layers are conceptually separate, real AI systems involve interactions across multiple layers.
 
-The stack also reveals important trade-offs:
+Example system flow:
 
-| Layer | Typical design tension |
-|---|---|
-| Interaction | UX simplicity vs capability exposure |
-| Application | business control vs orchestration complexity |
-| Orchestration | flexibility vs debuggability |
-| Prompt | expressiveness vs maintainability |
-| Retrieval | grounding quality vs latency |
-| Model | quality vs cost |
-| Data | freshness vs governance |
-| Infrastructure | scale vs operational complexity |
+```id="system-flow"
+User
+↓
+Interaction Layer
+↓
+Application Layer
+↓
+Orchestration Layer
+↓
+Prompt Layer
+↓
+Retrieval Layer
+↓
+Model Layer
+↓
+Response
+```
 
-Not every system needs every layer equally. A prompt-only classifier may have little or no retrieval layer. A large enterprise RAG platform may use all layers extensively.
+This layered execution model helps engineers understand:
 
-## Related Sections
+- where failures occur
+- how information flows through the system
+- which components influence system behavior
 
-- [Introduction to AI Systems Engineering](../foundations/introduction-to-ai-systems-engineering.md)
-- [Architectural Patterns](architectural-patterns.md)
-- [Retrieval-Augmented Generation](retrieval-augmented-generation.md)
-- [The Internal AI Platform](../platform-engineering/the-internal-ai-platform.md)
-- [Observability Strategy for LLM Systems](../observability/index.md)
+---
+
+## Chapter Summary
+
+- Modern AI applications consist of multiple interacting components organized into architectural layers.
+- The AI Systems Reference Stack provides a conceptual framework for understanding these layers.
+- The stack separates responsibilities across interaction, application logic, orchestration, prompts, retrieval systems, models, data, and infrastructure.
+- Not all systems require every layer, but the stack provides a useful reference model for reasoning about system design.
+- This layered architecture helps engineers design scalable, maintainable, and observable AI systems.
+
+---
+
+## Comprehension Questions
+
+1. What is the purpose of the AI Systems Reference Stack?
+2. Which responsibilities belong to the Interaction Layer?
+3. What role does the Orchestration Layer play in an AI system?
+4. Why is the Prompt Layer important in LLM-based architectures?
+5. How does the Retrieval Layer extend the capabilities of language models?
+6. Why is the Data Layer critical for system reliability?
+
+---
+
+## References
+
+### Papers
+
+Attention Is All You Need — Vaswani et al., 2017
+[https://arxiv.org/abs/1706.03762](https://arxiv.org/abs/1706.03762)
+
+Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks — Lewis et al., 2020
+[https://arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
+
+### Books
+
+Designing Machine Learning Systems — Chip Huyen
+[https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/)
+
+Designing Data-Intensive Applications — Martin Kleppmann
+[https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/)
+
+---
 
 ## Key Takeaways
 
-- The reference stack gives a shared architectural language for AI systems.
-- It helps separate concerns across interaction, application, orchestration, prompts, retrieval, models, data, and infrastructure.
-- It is a reasoning tool, not a rigid implementation prescription.
-- The stack makes later chapters in the book easier to connect and compare.
+- AI systems are composed of multiple architectural layers.
+- The AI Systems Reference Stack provides a framework for understanding these layers.
+- Each layer has a specific responsibility within the system architecture.
+- Separating responsibilities across layers improves scalability and maintainability.
+- The layered architecture helps engineers reason about complex AI systems.
